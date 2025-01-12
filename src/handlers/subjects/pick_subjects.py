@@ -472,12 +472,12 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
     user = await get_user_data(call.from_user.id)
     agreement = make_agreement(datas, output_path=f'Публичная_оферта_{user.name}.docx')
     caption = (f'<b>Заявка от пользователя {user.name}</b>\nID: {call.from_user.id}\n\nЗаказчик:\n'
-               f'- ФИО: {data.get('name')}\n- Контактный телефон: {data.get('phone')}\n'
-               f'email: {data.get('mail')}\n\nПолучатель услуг:\nФИО: {data.get('receiver_name')}\n'
-               f'email: {data.get('receiver_mail')}\nКласс: {data.get('class_')}\n\n'
-               f'Услуги:\n- Предмет: {data.get('category')}\n- Кол-во занятий: {data.get('trainings')}\n'
-               f'- Формат занятий: {"Индивидуальный" if data.get('training_type') == 'individual' else "Групповые"}\n'
-               f'- Итоговая стоимость: {data.get('price')}')
+               f'- ФИО: {data.get("name")}\n- Контактный телефон: {data.get("phone")}\n'
+               f'email: {data.get("mail")}\n\nПолучатель услуг:\nФИО: {data.get("receiver_name")}\n'
+               f'email: {data.get("receiver_mail")}\nКласс: {data.get("class_")}\n\n'
+               f'Услуги:\n- Предмет: {data.get("category")}\n- Кол-во занятий: {data.get("trainings")}\n'
+               f'- Формат занятий: {"Индивидуальный" if data.get("training_type") == "individual" else "Групповые"}\n'
+               f'- Итоговая стоимость: {data.get("price")}')
 
     await bot.send_document(
         chat_id=APPLICATION_GROUP_ID,
