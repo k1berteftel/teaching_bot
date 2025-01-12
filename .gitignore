@@ -1,0 +1,14 @@
+*.env
+*.db
+__pycache__
+logs/
+.vscode
+
+
+*.ipynb
+
+venv
+.venv
+
+pics/
+files/

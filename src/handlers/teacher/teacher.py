@@ -1,0 +1,148 @@
+from os import listdir
+
+from aiogram import Router, F
+from aiogram.types import CallbackQuery, FSInputFile, Message
+from aiogram.fsm.context import FSMContext
+from aiogram.utils.media_group import MediaGroupBuilder
+from dotenv import load_dotenv
+
+from src.gpt.ask import fetch_response
+from src.database import update_user_role, get_user_data
+from src.handlers import AIChat
+from src.keyboards import teacher_start_menu_keyboard, confirmed_teacher, confirmed_teacher_agreement_keyboard
+from src.keyboards.back import quit_ai_chat
+
+teacher_router = Router()
+load_dotenv()
+
+
+@teacher_router.callback_query(F.data == "teacher_main_menu")
+async def teacher_main_menu(call: CallbackQuery, state: FSMContext):
+    user = await get_user_data(call.from_user.id)
+    if user:
+        await call.message.delete()
+        await state.clear()
+        if user.role == "confirmed_teacher":
+            await call.message.answer(f"""Ты находишься в главном меню.""", reply_markup=confirmed_teacher)
+        elif user.role == "teacher":
+            await call.message.answer(f"""Ты находишься в главном меню.""", reply_markup=teacher_start_menu_keyboard)
+    else:
+        await call.message.answer("Не удалось получить данные о пользователе. Пропишите команду /start ")
+
+
+@teacher_router.callback_query(F.data == "teacher")
+async def teacher_start(call: CallbackQuery, state: FSMContext):
+    try:
+        await call.message.bot.delete_messages(chat_id=call.from_user.id, message_ids=[i for i in range(
+            call.message.message_id - 7, call.message.message_id)])
+    except Exception as e:
+        print(e)
+
+    await call.message.delete()
+
+    media = MediaGroupBuilder()
+
+    # ID в телеграм боте
+    # teacher_start_photos_ids = [
+    #     'AgACAgIAAxkDAAIHnGcjdqzul7rdtHGQc5otdfOs6AS5AALn4TEbeX8ZSQbbppRbC4VjAQADAgADdwADNgQ',
+    #                             'AgACAgIAAxkDAAIHnmcjdq4KzERh_cJhxNtqsTpl7L4OAALq4TEbeX8ZSUGMMUP086rzAQADAgADdwADNgQ',
+    #                             'AgACAgIAAxkDAAIHoWcjdrIaDVDwFWn5B_RiGKepcHsGAALt4TEbeX8ZSbomEjr6n5L4AQADAgADdwADNgQ',
+    #                             'AgACAgIAAxkDAAIHoGcjdrENSSPCWJ5PPB5VMVJA7Mn_AALs4TEbeX8ZSSZat3mLsz1tAQADAgADdwADNgQ',
+    #                             'AgACAgIAAxkDAAIHomcjdrRabGJh84xFPrJfl6IP7X2_AALu4TEbeX8ZSbYXbwrvklhYAQADAgADdwADNgQ',
+    #                             'AgACAgIAAxkDAAIHnWcjdq3aeu47DKVeEgWSKzLAl-kdAALo4TEbeX8ZSSfp-va2QK3FAQADAgADdwADNgQ',
+    #                             'AgACAgIAAxkDAAIHn2cjdrA1y38JKDiGHtG0j8Kzd0NWAALr4TEbeX8ZSRB5WCNE4NHkAQADAgADdwADNgQ'
+    # ]
+
+    # for photo_id in teacher_start_photos_ids:
+    #     media.add(type='photo', media=photo_id)
+    
+    teacher_start_img = [
+        "src/pics/teacher_start/teacher1.png",
+        "src/pics/teacher_start/teacher2.png",
+        "src/pics/teacher_start/teacher3.png",
+        "src/pics/teacher_start/teacher4.png",
+        "src/pics/teacher_start/teacher5.png",
+        "src/pics/teacher_start/teacher6.png",
+        "src/pics/teacher_start/teacher7.png",
+    ]
+    
+    for img in teacher_start_img:
+        media.add(
+            type="photo",
+            media=FSInputFile(img)
+        )
+
+    start_photos = await call.message.answer_media_group(media=media.build())
+    await state.update_data(photos_to_delete=[msg.message_id for msg in start_photos])
+
+    is_updated = await update_user_role(telegram_id=call.from_user.id, new_role="teacher")
+    if is_updated:
+        data = await state.get_data()
+        name = data.get('name', 'пользователь')
+        await call.message.answer(f"""
+Здравствуйте, {name}, вы находитесь в главном меню.
+Всплывает описание процесса найма, этапами отбора, обучением и процессом работы.
+""", reply_markup=teacher_start_menu_keyboard)
+    else:
+        await call.message.edit_text(f"""
+Ошибка: не удалось обновить роль клиента. Обратитесь в поддержку!
+""")
+
+
+@teacher_router.callback_query(F.data == "teacher_accepted")
+async def show_agreement(call: CallbackQuery, state: FSMContext):
+    user = await get_user_data(call.from_user.id)
+    await call.message.delete()
+    documents_media = MediaGroupBuilder()
+
+    for doc in listdir('./src/files/confirmed_teacher_agreement'):
+        document = FSInputFile(path=f"./src/files/confirmed_teacher_agreement/{doc}")
+        documents_media.add_document(media=document)
+
+    start_photos = await call.message.answer_media_group(media=documents_media.build())
+    await state.update_data(photos_to_delete=[msg.message_id for msg in start_photos])
+
+    await call.message.answer(text=f"""
+{user.name}!   
+Перед тем как вы приступите к обучению, внимательно ознакомьтесь с Офертой на оказание информационно-консультационных услуг и с ее Приложениями (условия оказания услуг и  стандарт исполнителя). 
+
+Оферта считается принятой, а Договор заключенным и вступившим в силу, с момента введения вами на платформе логина и пароля, полученного от нас.   
+
+Когда ознакомитесь с Офертой и Приложениями, нажимайте кнопку "Ознакомился(-ась). 
+Если у вас возникнут вопросы, обязательно обращайтесь в чат "поддержка".  
+
+С уважением, Команда easyknow      
+""", reply_markup=confirmed_teacher_agreement_keyboard)
+
+
+@teacher_router.callback_query(F.data == "ai_chat")
+async def ai_chat(call: CallbackQuery, state: FSMContext):
+    await state.set_state(AIChat.chatting)
+    await call.message.edit_text("""
+Привет, учителя и наставники! Добро пожаловать в чат «Полигон». Здесь вы можете получать экспертные рекомендации от ChatGPT по вопросам методик преподавания, создания эффективных уроков и лучших практик обучения. 
+
+Используйте ChatGPT для: 
+1. Тестирования гипотез: Задавайте вопросы и проверяйте идеи о том, как улучшить учебные программы и методы преподавания. 
+2. Методологические советы: Получите рекомендации по оптимальным методам обучения, планированию уроков и индивидуальному подходу к учащимся. 
+3. Рекомендации по работе с учениками: Советы по адаптации учебных материалов, взаимодействию с учениками и мотивации к учебе.     
+
+Примеры запросов: 
+- «Какую методологию можно использовать для обучения трудным темам в физике?» 
+- «Какие интерактивные методы преподавания подойдут для улучшения навыков общения на английском языке?» 
+- «Как построить обратную связь с учениками по итогам контрольной работы?»  
+
+Задавайте ваши вопросы и получайте ответы на основе современных исследований и опыта в педагогике!
+""", reply_markup=quit_ai_chat)
+
+
+@teacher_router.message(AIChat.chatting)
+async def chat_with_ai(message: Message, state: FSMContext):
+    if message.text:
+        response = await fetch_response(
+            prompt=f"Ты наставник - методист для учителей по иностранным языкам и школьным предметам. \n{message.text}")
+        await message.answer(response)
+
+
+@teacher_router.callback_query(F.data == "my_students")
+async def my_students(call: CallbackQuery):
+    await call.answer("Этот функционал пока не реализован...")
