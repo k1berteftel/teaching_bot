@@ -26,7 +26,7 @@ def get_token(datas: dict):
     for i, j in datas.items():
         if type(j) is not dict:
             items.append({i: j})
-    items.append({"Password": "cc3hw8u2hsvcjquz"})
+    items.append({"Password": "60qa0kwm3e7vllle"})
     items = sorted(items, key=max)
     #print(''.join(str(i[list(i.keys())[0]]) for i in items))
     return str(hashlib.sha256(''.join(str(i[list(i.keys())[0]]) for i in items).encode('utf-8')).hexdigest())
@@ -34,7 +34,7 @@ def get_token(datas: dict):
 
 async def init_payment(amount: int, description: str, user_id: int) -> dict:
     json = {
-        "TerminalKey": "1730455815051DEMO",
+        "TerminalKey": "1730455815051",
         "Amount": amount,
         "OrderId": get_random_id(),
         "Token": "",
@@ -60,7 +60,7 @@ async def init_payment(amount: int, description: str, user_id: int) -> dict:
 
 async def check_payment(payment_id) -> bool:
     new_json = {
-        "TerminalKey": "1730455815051DEMO",
+        "TerminalKey": "1730455815051",
         "Token": '',
         "PaymentId": payment_id
     }

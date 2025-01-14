@@ -1,3 +1,5 @@
+import os
+
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
@@ -50,18 +52,13 @@ async def start_handler(message: Message, state: FSMContext):
         # for file_id in start_photos_ids:
         #     media.add(type="photo", media=file_id)
         
-        start_img = [
-            "src/pics/start/start1.png",
-            "src/pics/start/start2.png",
-            "src/pics/start/start3.png",
-            "src/pics/start/start4.png",
-            "src/pics/start/start5.png",
-        ]
+        start_img = os.listdir("src/pics/start")
         
         for img in start_img:
+            print(img)
             media.add(
                 type="photo",
-                media=FSInputFile(img)
+                media=FSInputFile(path="src/pics/start/" + img)
             )
         
         await message.answer_media_group(media=media.build())
@@ -101,21 +98,14 @@ async def get_name(message: Message, state: FSMContext):
             # ]
             # for photo_id in instruction_photos_ids:
             #     media.add(type="photo", media=photo_id)
-            instructions_img = [
-                "src/pics/instructions/instruction1.png",
-                "src/pics/instructions/instruction2.png",
-                "src/pics/instructions/instruction3.png",
-                "src/pics/instructions/instruction4.png",
-                "src/pics/instructions/instruction5.png",
-                "src/pics/instructions/instruction6.png",
-                "src/pics/instructions/instruction7.png",
-            ]
+            instructions_img = os.listdir('src/pics/instructions')
             for img in instructions_img:
+                print(img, 'src/pics/instructions/' + img)
                 media.add(
                     type="photo",
-                    media=FSInputFile(img)
+                    media=FSInputFile(path='src/pics/instructions/' + img)
                 )
-            
+
             await message.answer_media_group(media=media.build())
             await message.answer(f"""{message.text}, рады приветствовать тебя! Ознакомься с инструкцией по использованию нашего бота, а затем выбери, хочешь ли ты у нас учиться или преподавать.Желаем удачи! 😊
 """, reply_markup=teacher_or_student)
