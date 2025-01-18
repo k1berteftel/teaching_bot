@@ -13,11 +13,12 @@ from aiogram.utils.media_group import MediaGroupBuilder
 from src.gpt.ask import fetch_response
 from src.handlers.fsm_models import TrainingInput, AIChat
 from src.database.products import get_product_by_id, get_subject_categories, \
-    get_products_by_category, get_languages_categories
-from src.database import update_user_role, get_user_data, add_product_to_user
+    get_products_by_category, get_languages_categories, get_subject_teachers
+from src.database import update_user_role, get_user_data, add_product_to_user, get_user_by_username
 from src.keyboards import subjects, subject_categories_builder, products_builder, product_actions_keyboard, \
     student_menu_back, language_categories_builder, training_type_builder, choose_lessons_builder, confirm_contract_builder, \
-    user_name_builder, contract_builder, close_quiz_builder, payment_builder, custom_poll_builder
+    user_name_builder, contract_builder, close_quiz_builder, payment_builder, custom_poll_builder, choose_teacher_builder, \
+    choose_teacher_builder, confirmed_student
 from src.payment.tbank_pay import init_payment, check_payment
 
 from docx import Document
@@ -110,6 +111,7 @@ async def languages(call: CallbackQuery):
     await call.message.delete()
     languages_list = await get_languages_categories()
     languages_list = set(languages_list)
+    product = await get_products_by_category('language', 'английский')
     if languages_list:
         keyboard = await language_categories_builder(languages_list)
         await call.message.answer("Выбери язык ниже:", reply_markup=keyboard)
@@ -123,9 +125,9 @@ async def choose_product_lang(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="language", category=call.data.split("|")[1])
     builder: MediaGroupBuilder = MediaGroupBuilder()
-    for image in os.listdir('src/images'):
+    for image in os.listdir('src/pics/subject_prices'):
         if image.endswith('png'):
-            builder.add_photo(media=FSInputFile(path=f'src/images/{image}'))
+            builder.add_photo(media=FSInputFile(path=f'src/pics/subject_prices/{image}'))
     keyboard = await training_type_builder('languages')
     messages = []
     for msg in await call.message.answer_media_group(media=builder.build()):
@@ -161,9 +163,9 @@ async def choose_product_sub(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="subject", category=call.data.split("|")[1])
     builder: MediaGroupBuilder = MediaGroupBuilder()
-    for image in os.listdir('src/images'):
+    for image in os.listdir('src/pics/subject_prices'):
         if image.endswith('png'):
-            builder.add_photo(FSInputFile(f'src/images/{image}'))
+            builder.add_photo(FSInputFile(f'src/pics/subject_prices/{image}'))
     keyboard = await training_type_builder('school_subjects')
     messages = []
     for msg in await call.message.answer_media_group(builder.build()):
@@ -371,6 +373,28 @@ async def get_receiver_mail(msg: Message, state: FSMContext):
         ...
     await state.update_data(receiver_mail=msg.text)
     keyboard = await custom_poll_builder('back_get_receiver_mail')
+    await state.set_state(TrainingInput.waiting_for_username)
+    await msg.answer('Введите юзернейм пользователя на которого вы хотите приобрести обучение или "-" если '
+                     'вы приобретаете на данный аккаунт\n'
+                     '<em>! Важно чтобы пользователь хоть раз запускал бота</em>', reply_markup=keyboard)
+
+
+@subject_router.message(and_f(F.text, StateFilter(TrainingInput.waiting_for_username)))
+async def get_username(msg: Message, state: FSMContext):
+    try:
+        await msg.bot.delete_message(chat_id=msg.from_user.id, message_id=msg.message_id - 1)
+    except Exception:
+        ...
+    if msg.text != '-':
+        user = await get_user_by_username(msg.text)
+        if user is None:
+            await msg.answer('Данного пользователя нет в базе данных бота, пожалуйста попробуйте снова')
+            return
+        await state.update_data(username=msg.text)
+    else:
+        await state.update_data(username=None)
+    await msg.delete()
+    keyboard = await custom_poll_builder('back_get_username')
     await state.set_state(TrainingInput.waiting_for_class)
     await msg.answer('Введите класс обучения Получателя услуг (укажите цифру или поставьте прочерк)', reply_markup=keyboard)
 
@@ -430,8 +454,8 @@ async def get_class(msg: Message, state: FSMContext):
 
 @subject_router.callback_query(F.data == 'confirm')
 async def confirm(clb: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
     await clb.message.delete()
+    data = await state.get_data()
     description = (f"Покупка {data.get('trainings')} {'индивидуальных' if data.get('individual') else 'групповых'}"
                    f" по предмету: {data.get('category')}")
     payment = await init_payment(data.get('price'), description, clb.from_user.id)
@@ -453,8 +477,6 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
         await call.answer('Оплата не была совершенна, пожалуйста попробуйте еще')
         return
     await call.answer('Оплата была успешно подтверждена')
-    await update_user_role(call.from_user.id, 'confirmed_student')
-    await add_product_to_user(call.from_user.id, data.get('category'))
     datas = {
         'name': data.get('name'),
         'phone': data.get('phone'),
@@ -479,11 +501,65 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
                f'- Формат занятий: {"Индивидуальный" if data.get("training_type") == "individual" else "Групповые"}\n'
                f'- Итоговая стоимость: {data.get("price")}')
 
+    teachers = await get_subject_teachers(data.get('category'))
+    keyboard = await choose_teacher_builder(teachers)
     await bot.send_document(
         chat_id=APPLICATION_GROUP_ID,
         document=FSInputFile(path=agreement),
-        caption=caption
+        caption=caption,
+        reply_markup=keyboard
     )
+    caption = """Добро пожаловать в вашу учебную программу в easyknow!
+
+В главном меню бота вы найдете несколько полезных функций:
+
+📩 Поддержка
+Если у вас возникли вопросы, связанные с обучением, школой, расписанием или оплатой, смело обращайтесь сюда. Наши специалисты оперативно вам помогут!
+
+🛠️ Техническая поддержка
+Сюда вы можете писать, если возникли технические трудности: сбои в работе бота, проблемы с подключением к урокам или другие неполадки.
+
+👩‍🏫 Мой учитель
+Это ваш чат с учителем по выбранному предмету. Задавайте вопросы, уточняйте детали по урокам и получайте помощь в выполнении домашних заданий.
+
+📊 Мой прогресс
+В этом разделе вы можете следить за своим прогрессом: уровень вашего напарника Макса, ваш рейтинг и достижения.
+
+🤖 Мой Макс
+Перед началом обучения перейдите в этот раздел! Макс — ваш виртуальный напарник. Он поможет:
+
+Узнать ваши цели и предпочтения в обучении.
+Провести тестирование по предмету, чтобы подобрать индивидуальный маршрут.
+Ответить на вопросы, разобрать сложные темы и поддержать вас в обучении.
+Желаем увлекательного и продуктивного обучения! Если что-то будет непонятно, не стесняйтесь обращаться за помощью! 😊
+    """
+    media = MediaGroupBuilder(caption=caption)
+    photos = os.listdir('src/pics/confirmed_student_start')
+    for photo in photos:
+        media.add_photo(
+            media=FSInputFile(f'src/pics/confirmed_student_start/{photo}')
+        )
+    if data.get('username') is not None:
+        user = await get_user_by_username(data.get('username'))
+        await update_user_role(user.telegram_id, 'confirmed_student')
+        await add_product_to_user(user.telegram_id, data.get('category'))
+        await call.bot.send_media_group(
+            chat_id=user.telegram_id,
+            media=media.build()
+        )
+        await call.bot.send_message(
+            chat_id=user.telegram_id,
+            text='Ты в главном меню',
+            reply_markup=confirmed_student
+        )
+    else:
+        await update_user_role(call.from_user.id, 'confirmed_student')
+        await add_product_to_user(call.from_user.id, data.get('category'))
+        await call.message.answer_media_group(media=media.build())
+        await call.message.answer(
+            text='Ты в главном меню',
+            reply_markup=confirmed_student
+        )
     try:
         os.remove(agreement)
     except Exception as err:

@@ -5,6 +5,7 @@ from asyncio import run
 from aiogram import Bot, Dispatcher
 from loguru import logger
 
+from src.database import update_user_role
 from src import student_router, start_router, learning_router, subject_router, admin_router, teacher_router, \
     menu_router, support_router, interview_router, product_router, interview_questions_router, back_subject_router
 from src import create_tables
@@ -17,6 +18,7 @@ STUDENT_GROUP_ID = getenv('STUDENT_GROUP_ID')
 TEACHER_GROUP_ID = getenv('TEACHER_GROUP_ID')
 RECRUITERS_GROUP_ID = getenv('RECRUITERS_GROUP_ID')
 METHODICAL_GROUP_ID = getenv('METHODICAL_GROUP_ID')
+APPLICATION_GROUP_ID = (getenv('APPLICATION_GROUP_ID'))
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
@@ -27,7 +29,7 @@ dp.message.middleware.register(GroupMessageMiddleware(
     group_id_student=int(STUDENT_GROUP_ID),
     group_id_teacher=int(TEACHER_GROUP_ID),
     group_id_recruiter=int(RECRUITERS_GROUP_ID),
-    group_id_methodical=int(METHODICAL_GROUP_ID)
+    group_id_methodical=int(METHODICAL_GROUP_ID),
 ))
 
 
@@ -35,6 +37,7 @@ dp.callback_query.middleware.register(GroupCallbackMiddleware(
     group_id_student=int(STUDENT_GROUP_ID),
     group_id_teacher=int(TEACHER_GROUP_ID),
     group_id_recruiter=int(RECRUITERS_GROUP_ID),
+    group_id_application=int(APPLICATION_GROUP_ID),
     allowed_callback_data={"candidate_accept", "candidate_decline"}
 ))
 
@@ -45,6 +48,7 @@ logger.add("bot_log.log", rotation="10 MB")
 
 async def bot_start():
     await create_tables()
+    #await update_user_role(1236300146, 'student')
     logger.info("Bot is starting...")
     try:
         dp.include_routers(

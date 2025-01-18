@@ -56,4 +56,9 @@ class TrainingInput(Base):
     waiting_for_mail = State()
     waiting_for_receiver_name = State()
     waiting_for_receiver_mail = State()
+    waiting_for_username = State()
     waiting_for_class = State()
+
+
+class MallingInput(Base):
+    waiting_for_message = State()

@@ -93,12 +93,24 @@ async def back_get_receiver_name(clb: CallbackQuery, state: FSMContext):
     await clb.message.answer('Введите полное имя Получателя услуг (ваше или вашего ребенка)', reply_markup=keyboard)
 
 
-@back_subject_router.callback_query(and_f(F.data == 'back_get_receiver_mail', StateFilter(TrainingInput.waiting_for_class)))
+@back_subject_router.callback_query(and_f(F.data == 'back_get_receiver_mail', StateFilter(TrainingInput.waiting_for_username)))
 async def back_get_receiver_mail(clb: CallbackQuery, state: FSMContext):
     await clb.message.delete()
     keyboard = await custom_poll_builder('back_get_receiver_name')
     await state.set_state(TrainingInput.waiting_for_receiver_mail)
     await clb.message.answer('Введите электронную почту Получателя услуг', reply_markup=keyboard)
+
+
+@back_subject_router.callback_query(and_f(F.data == 'back_get_username', StateFilter(TrainingInput.waiting_for_class)))
+async def back_get_username(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    keyboard = await custom_poll_builder('back_get_receiver_mail')
+    await state.set_state(TrainingInput.waiting_for_username)
+    await clb.message.answer(
+        'Введите юзернейм пользователя на которого вы хотите приобрести обучение или "-" если '
+            'вы приобретаете на данный аккаунт\n'
+            '<em>! Важно чтобы пользователь хоть раз запускал бота</em>', reply_markup=keyboard
+    )
 
 
 @back_subject_router.callback_query(F.data == 'back_product')
@@ -112,7 +124,7 @@ async def back_get_product(call: CallbackQuery, state: FSMContext):
             f'Если вам потребуется откорректировать данные - вернитесь назад и заполните данные заново.')
     keyboard = await contract_builder()
     builder: MediaGroupBuilder = MediaGroupBuilder()
-    builder.add_document(FSInputFile(f'src/files/student_agreement/agreement1.docx'))
+    builder.add_document(FSInputFile(f'src/files/student_agreement/Правила распорядка.docx'))
     data = await state.get_data()
     datas = {
         'name': data.get('name'),
@@ -134,7 +146,7 @@ async def back_get_product(call: CallbackQuery, state: FSMContext):
     for mess in await call.message.answer_media_group(builder.build()):
         messages.append(mess.message_id)
     await state.update_data(photos_to_delete=messages)
-    await call.answer(text, reply_markup=keyboard)
+    await call.message.answer(text, reply_markup=keyboard)
     try:
         os.remove(agreement)
     except Exception as err:

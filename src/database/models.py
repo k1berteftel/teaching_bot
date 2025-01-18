@@ -44,4 +44,5 @@ class ProductModel(Base):
         "UserModel",
         secondary=user_product_association,
         back_populates="subscribed_products",
+        lazy="selectin"
     )

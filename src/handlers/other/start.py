@@ -10,7 +10,7 @@ from os import getenv
 from dotenv import load_dotenv
 
 from src.database import get_user_data, update_user_name
-from src.keyboards import student_menu_keyboard, teacher_or_student, teacher_start_menu_keyboard, confirmed_teacher
+from src.keyboards import student_menu_keyboard, teacher_or_student, teacher_start_menu_keyboard, confirmed_teacher, confirmed_student
 from src.handlers.fsm_models import NameInput
 
 start_router = Router()
@@ -73,6 +73,9 @@ async def start_handler(message: Message, state: FSMContext):
         if user.role == "confirmed_teacher":
             await message.answer("Приветствую в нашей онлайн школе!",
                                  reply_markup=confirmed_teacher)
+        if user.role == 'confirmed_student':
+            await message.answer('Приветствую в нашей онлайн школе!',
+                                 reply_markup=confirmed_student)
 
 
 @start_router.message(NameInput.waiting_for_name)

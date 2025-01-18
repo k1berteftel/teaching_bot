@@ -13,6 +13,19 @@ redis_client = redis.Redis(
 )
 
 
+async def get_all_users() -> list[UserModel]:
+    async with async_session_maker() as session:
+        users = await session.scalars(select(UserModel))
+        return users.fetchall()
+
+
+async def get_user_by_username(username: str) -> UserModel | None:
+    async with async_session_maker() as session:
+        user = await session.execute(select(UserModel).where(UserModel.username == username))
+        user = user.scalar_one_or_none()
+        return user
+
+
 async def get_user_products(telegram_id: int):
     async with async_session_maker() as session:
         user = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))

@@ -7,6 +7,16 @@ from .connection import async_session_maker
 from .models import UserModel, ProductModel
 
 
+async def get_subject_teachers(subject: str) -> list[UserModel]:
+    async with async_session_maker() as session:
+        product = await session.scalar(select(ProductModel).where(ProductModel.subject == subject))
+        teachers = []
+        for user in product.subscribers:
+            if user.role == 'confirmed_teacher':
+                teachers.append(user)
+        return teachers
+
+
 async def create_product(product_type: str, name: str, description: str, lessons_quantity: int, price: float,
                          subject: str):
     async with async_session_maker() as session:

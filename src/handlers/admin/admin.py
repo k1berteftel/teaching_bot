@@ -1,13 +1,15 @@
 from aiogram import Router, F
-from aiogram.filters import or_f
+from aiogram.filters import or_f, and_f, StateFilter
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from dotenv import load_dotenv
 from os import getenv
 
-from src.keyboards import admin_panel
+from src.handlers.fsm_models import MallingInput
+from src.keyboards import admin_panel, main_admin_builder, back_admin_builder, choose_role_builder
 from src.middlewares import AdminMiddleware
+from src.database import get_all_users
 
 admin_router = Router()
 admin_router.callback_query.middleware.register(AdminMiddleware())
@@ -41,3 +43,99 @@ async def show_admin_panel_call(call: CallbackQuery, state: FSMContext):
 async def show_admin_panel(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(f"Вы попали в админ панель!", reply_markup=admin_panel)
+
+
+@admin_router.message(F.text == '*Полная админка')
+async def show_full_admin_panel(message: Message, state: FSMContext):
+    await message.delete()
+    await state.clear()
+    keyboard = await main_admin_builder()
+    await message.answer(
+        text='Полная админ панель',
+        reply_markup=keyboard
+    )
+
+
+@admin_router.callback_query(F.data == 'admin_panel')
+async def show_full_admin_panel(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    await state.clear()
+    keyboard = await main_admin_builder()
+    await clb.message.answer(
+        text='Полная админ панель',
+        reply_markup=keyboard
+    )
+
+
+@admin_router.callback_query(F.data == 'malling')
+async def send_choose_role(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    keyboard = await choose_role_builder()
+    await clb.message.answer(
+        text='Выберите группу пользователей которым вы хотели бы разослать сообщение',
+        reply_markup=keyboard
+    )
+
+
+@admin_router.callback_query(F.data.startswith('choose_role|'))
+async def send_get_mail(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    await state.update_data(role=clb.data.split('|')[1])
+    await state.set_state(MallingInput.waiting_for_message)
+    keyboard = await back_admin_builder()
+    await clb.message.answer(
+        text='Отправьте сообщение которое вы хотели бы разослать всем пользователям, '
+             'после получения сообщения оно сразу же разошлется всем пользователям',
+        reply_markup=keyboard
+    )
+
+
+@admin_router.message(and_f(F.text, StateFilter(MallingInput.waiting_for_message)))
+async def start_malling(message: Message, state: FSMContext):
+    data = await state.get_data()
+    role = data.get('role')
+    users = await get_all_users()
+    count = 0
+    if role == 'everyone':
+        for user in users:
+            try:
+                await message.send_copy(
+                    chat_id=user.telegram_id
+                )
+                count += 1
+            except Exception as err:
+                print(err)
+    else:
+        for user in users:
+            if user.role == role:
+                try:
+                    await message.send_copy(
+                        chat_id=user.telegram_id
+                    )
+                    count += 1
+                except Exception as err:
+                    print(err)
+    await message.delete()
+    await message.answer(f'Сообщение было разослано {count} пользователям')
+    await state.clear()
+    keyboard = await main_admin_builder()
+    await message.answer(
+        text='Полная админ панель',
+        reply_markup=keyboard
+    )
+
+
+@admin_router.callback_query(F.data == 'statistic')
+async def get_statistics(clb: CallbackQuery):
+    users = await get_all_users()
+    roles = {}
+    for user in users:
+        if user.role:
+            if roles.get(user.role):
+                roles[user.role] = roles.get(user.role) + 1
+            else:
+                roles[user.role] = 1
+    text = (f'Всего пользователей: {len(users)}\nИз них:\n - Учителей: {roles.get("teacher") if roles.get("teacher") else 0}\n'
+            f' - Принятых учителей (прошедших собеседование): {roles.get("confirmed_teacher") if roles.get("confirmed_teacher") else 0}\n'
+            f' - Учеников: {roles.get("student") if roles.get("student") else 0}\n - Принятых учеников(купивших курсы): {roles.get("confirmed_student") if roles.get("confirmed_student") else 0}')
+    await clb.message.answer(text)

@@ -1,5 +1,5 @@
 from .main_keyboards import admin_panel, teacher_or_student, student_menu_keyboard, teacher_start_menu_keyboard, \
-    confirmed_teacher
+    confirmed_teacher, confirmed_student
 from .interview import confirm_interview_agreement, continue_interview, cancel_interview, categories_for_teaching, \
     categories_for_teacher_builder, start_or_back, have_hh_ru_resume_kb, start_interview_questions, \
     generate_questions_try_again, recruiter_keyboard, candidate_result
@@ -10,3 +10,4 @@ from .products import subjects, language_categories_builder, products_builder, p
     custom_poll_builder
 from .back import student_menu_back, teacher_menu_back, back_to_resume
 from .confirmed_teacher_keyboard import confirmed_teacher_agreement_keyboard
+from .admin import *

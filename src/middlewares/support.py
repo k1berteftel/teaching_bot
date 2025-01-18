@@ -6,12 +6,13 @@ from src.handlers.fsm_models import Interview
 
 
 class GroupCallbackMiddleware(BaseMiddleware):
-    def __init__(self, group_id_student: int, group_id_teacher: int, group_id_recruiter: int,
+    def __init__(self, group_id_student: int, group_id_teacher: int, group_id_recruiter: int, group_id_application: int,
                  allowed_callback_data: set):
         super().__init__()
         self.group_id_student = group_id_student
         self.group_id_teacher = group_id_teacher
         self.group_id_recruiter = group_id_recruiter
+        self.group_id_application = group_id_application
         self.allowed_callback_data = allowed_callback_data
 
     async def __call__(self,
@@ -23,7 +24,7 @@ class GroupCallbackMiddleware(BaseMiddleware):
             chat_id = event.message.chat.id
             callback_data = event.data
             if chat_id == self.group_id_recruiter:
-                if callback_data in self.allowed_callback_data or callback_data.startswith("candidate|"):
+                if callback_data in self.allowed_callback_data or callback_data.startswith("candidate|") or callback_data.startswith('teacher|'):
                     return await handler(event, data)
             return await handler(event, data)
 

@@ -1,6 +1,7 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
 admin_panel = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='*Полная админка')],
     [KeyboardButton(text="Добавить продукт")],
     [KeyboardButton(text="Удалить продукт")]
 ], resize_keyboard=True)
@@ -29,6 +30,14 @@ student_menu_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Медиа", callback_data="media")],
     [InlineKeyboardButton(text="Поддержка", callback_data="support")],
     [InlineKeyboardButton(text="Хочу преподавать", callback_data="teacher")]
+])
+
+confirmed_student = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Поддержка', callback_data='support')],
+    [InlineKeyboardButton(text='Техническая поддержка', callback_data='support|student')],
+    [InlineKeyboardButton(text='Мой учитель', callback_data='my_teachers')],
+    [InlineKeyboardButton(text='Мой прогресс', callback_data='my_progress')],
+    [InlineKeyboardButton(text='Мой Макс', callback_data='gamification')],
 ])
 
 confirmed_teacher = InlineKeyboardMarkup(inline_keyboard=[

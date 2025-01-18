@@ -35,7 +35,7 @@ def get_token(datas: dict):
 async def init_payment(amount: int, description: str, user_id: int) -> dict:
     json = {
         "TerminalKey": "1730455815051",
-        "Amount": amount,
+        "Amount": amount * 100,
         "OrderId": get_random_id(),
         "Token": "",
         "Description": description,
