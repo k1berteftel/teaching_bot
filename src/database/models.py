@@ -1,4 +1,4 @@
-from sqlalchemy import String, BigInteger, Integer, Table, Column, ForeignKey, Float
+from sqlalchemy import String, BigInteger, Integer, Table, Column, ForeignKey, Float, ARRAY
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.orm import Mapped, mapped_column
@@ -22,6 +22,7 @@ class UserModel(Base):
     username = Column(String, nullable=False)
     name = Column(String, default="")
     role = Column(String, default="")
+    partner = Column(ARRAY(BigInteger), nullable=True, default=[])
 
     subscribed_products = relationship(
         "ProductModel",
@@ -46,3 +47,8 @@ class ProductModel(Base):
         back_populates="subscribed_products",
         lazy="selectin"
     )
+
+
+class CounterTable(Base):
+    __tablename__ = 'counter'
+    promos = Column(String, default=0)

@@ -22,10 +22,12 @@ async def back_admin_builder() -> InlineKeyboardMarkup:
     return keyboard
 
 
-async def choose_teacher_builder(teachers: list[UserModel]) -> InlineKeyboardMarkup:
+async def choose_teacher_builder(teachers: list[UserModel], student_id: int, category: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+    builder.max_width = 1
     for teacher in teachers:
-        builder.button(text=f"{teacher.name}|{teacher.username}", callback_data=f'teacher|{teacher.telegram_id}')
+        builder.button(text=f"{teacher.name}|{teacher.username}", callback_data=f'teacher_add|{teacher.telegram_id}|{student_id}')
+    builder.button(text='Обновить список учителей', callback_data=f'refresh_teachers|{category}|{student_id}')
     return builder.as_markup()
 
 

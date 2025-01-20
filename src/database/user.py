@@ -1,7 +1,7 @@
 import json
 from typing import Literal, Optional
 import redis.asyncio as redis
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, update
 
 from .connection import async_session_maker
 from .models import UserModel, ProductModel
@@ -11,6 +11,48 @@ redis_client = redis.Redis(
     password="QLa<KA9mvh8^/q",
     username="user"
 )
+
+
+async def get_user_partners(telegram_id: int) -> list[dict] | None:
+    async with async_session_maker() as session:
+        user = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
+        user = user.scalar_one_or_none()
+        datas = []
+        print(user.__dict__)
+        print(user.partner)
+        for asso in user.partner:
+            teacher_id: int = asso[1]
+            teacher = await session.execute(select(UserModel).where(UserModel.telegram_id == teacher_id))
+            teacher = teacher.scalar_one_or_none()
+            print(teacher.__dict__)
+            print(user.subscribed_products)
+            for product in user.subscribed_products:
+                print(product.__dict__)
+                if product.subject in [prd.subject for prd in teacher.subscribed_products]:
+                    datas.append({
+                        'user_id': teacher_id,
+                        'name': teacher.name,
+                        'subject': product.subject
+                    })
+        return datas if datas else None
+
+
+async def add_partner_to_user(user_id: int, partner_id: int):
+    async with async_session_maker() as session:
+        user = await session.execute(select(UserModel).where(UserModel.telegram_id == user_id))
+        user = user.scalar_one_or_none()
+        print(user.__dict__)
+        partner = [[user_id, partner_id]]
+        if user.partner and [user.telegram_id, partner_id] not in user.partner:
+            partner = user.partner.append([user.telegram_id, partner_id])
+        print(partner)
+        await session.execute(update(UserModel).where(UserModel.telegram_id == user_id).values(
+            partner=partner
+        ))
+        await session.commit()
+        cache_key = f"user:{user.telegram_id}"
+        user_data = serialize_user(user)
+        await redis_client.set(cache_key, json.dumps(user_data), ex=3600)
 
 
 async def get_all_users() -> list[UserModel]:
@@ -42,6 +84,9 @@ async def add_product_to_user(telegram_id: int, subject: str):
         if user and product:
             user.subscribed_products.append(product)
             await session.commit()
+        cache_key = f"user:{telegram_id}"
+        user_data = serialize_user(user)
+        await redis_client.set(cache_key, json.dumps(user_data), ex=3600)
 
 
 async def registrate_user(telegram_id: int, username: str):
@@ -55,7 +100,7 @@ async def registrate_user(telegram_id: int, username: str):
         await redis_client.set(cache_key, json.dumps(user_data), ex=3600)
 
 
-async def is_user_exist(telegram_id, user_name):
+async def is_user_exist(telegram_id: int, user_name):
     async with async_session_maker() as session:
         check = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
         user = check.scalar_one_or_none()
@@ -78,6 +123,7 @@ def serialize_user(user: UserModel) -> dict:
         "username": user.username,
         "name": user.name,
         "role": user.role,
+        "partner": user.partner
         #"subscribed_products": [product.id for product in user.subscribed_products]
     }
 
@@ -88,7 +134,8 @@ def deserialize_user(data: dict) -> UserModel:
         telegram_id=data["telegram_id"],
         username=data["username"],
         name=data["name"],
-        role=data["role"]
+        role=data["role"],
+        partner=data["partner"]
     )
     return user
 

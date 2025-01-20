@@ -7,7 +7,8 @@ from loguru import logger
 
 from src.database import update_user_role
 from src import student_router, start_router, learning_router, subject_router, admin_router, teacher_router, \
-    menu_router, support_router, interview_router, product_router, interview_questions_router, back_subject_router
+    menu_router, support_router, interview_router, product_router, interview_questions_router, back_subject_router, \
+    confirmed_student_router
 from src import create_tables
 from src import UserCheckMiddleware, GroupMessageMiddleware, GroupCallbackMiddleware, DeletePhotosMiddleware
 
@@ -48,13 +49,14 @@ logger.add("bot_log.log", rotation="10 MB")
 
 async def bot_start():
     await create_tables()
-    #await update_user_role(1236300146, 'student')
+    #await update_user_role(7365313189, 'student')
     logger.info("Bot is starting...")
     try:
         dp.include_routers(
             interview_questions_router,
             start_router,
             menu_router,
+            confirmed_student_router,
             student_router,
             learning_router,
             subject_router,

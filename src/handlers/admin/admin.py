@@ -7,18 +7,22 @@ from dotenv import load_dotenv
 from os import getenv
 
 from src.handlers.fsm_models import MallingInput
-from src.keyboards import admin_panel, main_admin_builder, back_admin_builder, choose_role_builder
+from src.keyboards import admin_panel, main_admin_builder, back_admin_builder, choose_role_builder, choose_teacher_builder
 from src.middlewares import AdminMiddleware
-from src.database import get_all_users
+from src.database import get_all_users, get_user_data, add_partner_to_user
+from src.database.products import get_subject_teachers
 
 admin_router = Router()
-admin_router.callback_query.middleware.register(AdminMiddleware())
+
+admin_router.callback_query.outer_middleware.register(AdminMiddleware())
+admin_router.message.outer_middleware.register(AdminMiddleware())
 
 load_dotenv()
 
 STUDENT_GROUP_ID = int(getenv('STUDENT_GROUP_ID'))
 TEACHER_GROUP_ID = int(getenv('TEACHER_GROUP_ID'))
 METHODICAL_GROUP_ID = int(getenv('METHODICAL_GROUP_ID'))
+APPLICATION_GROUP_ID = int(getenv('APPLICATION_GROUP_ID'))
 
 
 @admin_router.message(or_f(F.chat.id == STUDENT_GROUP_ID, F.chat.id == TEACHER_GROUP_ID, F.chat.id == METHODICAL_GROUP_ID))
@@ -31,6 +35,25 @@ async def handle_group_message(message: Message):
             user_id = int(user_id_line[0].split('User id:')[1].strip())
 
             await message.bot.send_message(chat_id=user_id, text=f"<b>Ответ поддержки:</b>\n{message.text}")
+
+
+@admin_router.callback_query(F.data.startswith('refresh_teachers'))
+async def refresh_teachers_keyboard(clb: CallbackQuery, state: FSMContext):
+    category = clb.data.split('|')[1]
+    student_id = int(clb.data.split('|')[2])
+    teachers = await get_subject_teachers(category)
+    keyboard = await choose_teacher_builder(teachers, student_id, category)
+    await clb.message.edit_reply_markup(reply_markup=keyboard)
+
+
+@admin_router.callback_query(and_f(F.data.startswith('teacher_add')))
+async def add_user_teacher(clb: CallbackQuery, state: FSMContext):
+    print('success')
+    teacher_id = int(clb.data.split('|')[1])
+    student_id = int(clb.data.split('|')[2])
+    await add_partner_to_user(student_id, teacher_id)
+    await add_partner_to_user(teacher_id, student_id)
+    await clb.answer('Учитель был успешно добавлен ученику')
 
 
 @admin_router.callback_query(F.data == "admin_menu_back")

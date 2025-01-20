@@ -13,8 +13,8 @@ DB_HOST=getenv('DB_HOST')
 DB_PORT=getenv('DB_PORT')
 DB_NAME=getenv('DB_NAME')
 
-#DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-DATABASE_URL = 'postgresql+asyncpg://quest:quest@127.0.0.1:5432/data'
+DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+#DATABASE_URL = 'postgresql+asyncpg://quest:quest@127.0.0.1:5432/data'
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)

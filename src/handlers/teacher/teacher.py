@@ -3,14 +3,19 @@ from os import listdir
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.fsm.context import FSMContext
+from aiogram.filters import StateFilter
 from aiogram.utils.media_group import MediaGroupBuilder
 from dotenv import load_dotenv
 
 from src.gpt.ask import fetch_response
-from src.database import update_user_role, get_user_data
+from src.database.products import get_partner_subject
+from src.database.user import get_user_partners
+from src.database import update_user_role, get_user_data, ProductModel, UserModel
 from src.handlers import AIChat
-from src.keyboards import teacher_start_menu_keyboard, confirmed_teacher, confirmed_teacher_agreement_keyboard
+from src.keyboards import (teacher_start_menu_keyboard, confirmed_teacher,
+                           confirmed_teacher_agreement_keyboard, chatting_student_builder, stop_chatting_teacher)
 from src.keyboards.back import quit_ai_chat
+from src.handlers.fsm_models import PartnerChatting
 
 teacher_router = Router()
 load_dotenv()
@@ -32,6 +37,7 @@ async def teacher_main_menu(call: CallbackQuery, state: FSMContext):
 
 @teacher_router.callback_query(F.data == "teacher")
 async def teacher_start(call: CallbackQuery, state: FSMContext):
+    print('success')
     try:
         await call.message.bot.delete_messages(chat_id=call.from_user.id, message_ids=[i for i in range(
             call.message.message_id - 7, call.message.message_id)])
@@ -81,7 +87,6 @@ async def teacher_start(call: CallbackQuery, state: FSMContext):
         name = data.get('name', 'пользователь')
         await call.message.answer(f"""
 Здравствуйте, {name}, вы находитесь в главном меню.
-Всплывает описание процесса найма, этапами отбора, обучением и процессом работы.
 """, reply_markup=teacher_start_menu_keyboard)
     else:
         await call.message.edit_text(f"""
@@ -144,5 +149,37 @@ async def chat_with_ai(message: Message, state: FSMContext):
 
 
 @teacher_router.callback_query(F.data == "my_students")
-async def my_students(call: CallbackQuery):
-    await call.answer("Этот функционал пока не реализован...")
+async def my_students(clb: CallbackQuery, state: FSMContext):
+    await state.clear()
+    students = await get_user_partners(clb.from_user.id)
+    if students is None:
+        await clb.answer('К сожалению пока что у вас нет учеников, как только вам определят ученика мы вас уведомим')
+        return
+    await clb.message.delete()
+    keyboard = await chatting_student_builder(students)
+    await clb.message.answer('Выберите чат с учителем', reply_markup=keyboard)
+
+
+@teacher_router.message(StateFilter(PartnerChatting.teacher))
+async def send_message_to_student(message: Message, state: FSMContext):
+    data = await state.get_data()
+    user = await get_user_data(message.from_user.id)
+    partner: UserModel = data.get('partner')
+    subject: ProductModel = data.get('subject')
+    await message.bot.send_message(
+        chat_id=partner.telegram_id,
+        text=f'Сообщение от учителя <b>{user.name}</b>, по предмету: <b>{subject.subject}</b>'
+    )
+    await message.bot.copy_message(
+        chat_id=partner.telegram_id,
+        from_chat_id=message.chat.id,
+        message_id=message.message_id
+    )
+    try:
+        await message.bot.edit_message_reply_markup(chat_id=message.from_user.id, message_id=message.message_id - 1)
+    except Exception:  # рассчитать приблизительное расстояние для редактирования клавиатуры
+        ...
+    await message.answer(
+        '<b>Сообщение было доставлено</b>\nВы можете отправить следующее сообщение по необходимости',
+        reply_markup=stop_chatting_teacher
+    )

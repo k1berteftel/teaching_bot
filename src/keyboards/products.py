@@ -104,6 +104,11 @@ async def user_name_builder():
     return keyboard
 
 
+promo_close_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[[InlineKeyboardButton(text='Пропустить', callback_data='back_get_user_name')]]
+)
+
+
 async def contract_builder():
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[

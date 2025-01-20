@@ -11,14 +11,14 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from src.gpt.ask import fetch_response
-from src.handlers.fsm_models import TrainingInput, AIChat
+from src.handlers.fsm_models import TrainingInput, AIChat, Promo
 from src.database.products import get_product_by_id, get_subject_categories, \
     get_products_by_category, get_languages_categories, get_subject_teachers
-from src.database import update_user_role, get_user_data, add_product_to_user, get_user_by_username
+from src.database import update_user_role, get_user_data, add_product_to_user, get_user_by_username, get_count, add_count
 from src.keyboards import subjects, subject_categories_builder, products_builder, product_actions_keyboard, \
     student_menu_back, language_categories_builder, training_type_builder, choose_lessons_builder, confirm_contract_builder, \
     user_name_builder, contract_builder, close_quiz_builder, payment_builder, custom_poll_builder, choose_teacher_builder, \
-    choose_teacher_builder, confirmed_student
+    choose_teacher_builder, confirmed_student, promo_close_keyboard
 from src.payment.tbank_pay import init_payment, check_payment
 
 from docx import Document
@@ -89,6 +89,19 @@ def get_price(lessons: int, training_type: str) -> int | None:
         return individual_prices[lessons]
     else:
         return group_prices[lessons]
+
+
+def get_discount_price(lessons: int, price: int) -> int | float:
+    if lessons in range(16, 24):
+        return round(price * 0.95)
+    elif lessons in range(24, 32):
+        return round(price * 0.90)
+    elif lessons in range(32, 40):
+        return round(price * 0.85)
+    elif lessons in range(40, 129):
+        return round(price * 0.80)
+    else:
+        return price
 
 
 subject_router = Router()
@@ -193,7 +206,7 @@ async def choose_training_type(call: CallbackQuery, state: FSMContext):
     keyboard = await choose_lessons_builder(clb)
     text = ('Если вы уже определились сколько занятий в пакете вам комфортнее и оптимальнее всего выбрать, '
             'введите число с количеством занятий, которое соответствует значению в таблице выше '
-            '(например: 8, 24, 40).\n\nЕсли же сомневаетесь, мы вам рекомендуем пройти небольшой квиз!  ')
+            '(например: 8, 24, 40).\n\nЕсли же сомневаетесь, мы вам рекомендуем пройти небольшой квиз!')
     await state.set_state(TrainingInput.waiting_for_integer)
     await call.message.answer(text, reply_markup=keyboard)
 
@@ -277,6 +290,40 @@ async def confirm_contract(msg: Message, state: FSMContext):
     except Exception:
         ...
     await state.update_data(trainings=trainings, price=price)
+    discount_price = get_discount_price(trainings, price)
+    if discount_price != price:
+        await state.set_state(Promo.waiting)
+        await msg.answer('Введите промокод', reply_markup=promo_close_keyboard)
+        return
+    builder: MediaGroupBuilder = MediaGroupBuilder()
+    for document in os.listdir('src/files/student_agreement_1'):
+        builder.add_document(media=FSInputFile(f'src/files/student_agreement_1/{document}'))
+    messages = []
+    for mess in await msg.answer_media_group(builder.build()):
+        messages.append(mess.message_id)
+    await state.update_data(photos_to_delete=messages)
+    await state.set_state(None)
+    keyboard = await confirm_contract_builder(f'training_type|{data.get("training_type")}')
+    text = ('Перед тем, как мы приступим к заполнению заявки (Приложение в конце договора-оферты), '
+            'вам нужно подтвердить свое согласие на обработку персональных данных.\n\n'
+            'Я даю согласие ООО "Изиноу" (ОГРН 1242700016558) на обработку персональных данных на условиях'
+            ' Политики в отношении обработки и защиты персональных данных в целях заполнения Приложения '
+            'к договору-оферте (заявка), регистрации на платформе и получении информационных сообщений от школы.  ')
+    await msg.answer(text, reply_markup=keyboard)
+
+
+@subject_router.message(StateFilter(Promo.waiting))
+async def get_promo(msg: Message, state: FSMContext):
+    data = await state.get_data()
+    count = await get_count()
+    if msg.text == 'EASY100' and count < 100:
+        discount_price = get_discount_price(data.get('trainings'), data.get('price'))
+        await state.update_data(price=discount_price, discount=True)
+        await msg.answer('Промокод был успешно засчитан, вы получили скидку!')
+    elif msg.text == '-':
+        ...
+    else:
+        await msg.answer('Промокод неверен')
     builder: MediaGroupBuilder = MediaGroupBuilder()
     for document in os.listdir('src/files/student_agreement_1'):
         builder.add_document(media=FSInputFile(f'src/files/student_agreement_1/{document}'))
@@ -491,6 +538,7 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
         'full_price': data.get('price'),
         'date': datetime.datetime.today().strftime('%d.%m.%Y')
     }
+    username = data.get("username")
     user = await get_user_data(call.from_user.id)
     agreement = make_agreement(datas, output_path=f'Публичная_оферта_{user.name}.docx')
     caption = (f'<b>Заявка от пользователя {user.name}</b>\nID: {call.from_user.id}\n\nЗаказчик:\n'
@@ -500,9 +548,9 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
                f'Услуги:\n- Предмет: {data.get("category")}\n- Кол-во занятий: {data.get("trainings")}\n'
                f'- Формат занятий: {"Индивидуальный" if data.get("training_type") == "individual" else "Групповые"}\n'
                f'- Итоговая стоимость: {data.get("price")}')
-
+    user = await get_user_by_username(username) if username else user
     teachers = await get_subject_teachers(data.get('category'))
-    keyboard = await choose_teacher_builder(teachers)
+    keyboard = await choose_teacher_builder(teachers, user.telegram_id, data.get('category'))
     await bot.send_document(
         chat_id=APPLICATION_GROUP_ID,
         document=FSInputFile(path=agreement),
@@ -511,27 +559,18 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
     )
     caption = """Добро пожаловать в вашу учебную программу в easyknow!
 
-В главном меню бота вы найдете несколько полезных функций:
+В главном меню вы найдете несколько полезных функций:
 
-📩 Поддержка
+<b>📩 Поддержка</b>
 Если у вас возникли вопросы, связанные с обучением, школой, расписанием или оплатой, смело обращайтесь сюда. Наши специалисты оперативно вам помогут!
-
-🛠️ Техническая поддержка
+<b>🛠️ Техническая поддержка</b>
 Сюда вы можете писать, если возникли технические трудности: сбои в работе бота, проблемы с подключением к урокам или другие неполадки.
-
-👩‍🏫 Мой учитель
+<b>👩‍🏫 Мой учитель</b>
 Это ваш чат с учителем по выбранному предмету. Задавайте вопросы, уточняйте детали по урокам и получайте помощь в выполнении домашних заданий.
-
-📊 Мой прогресс
+<b>📊 Мой прогресс</b>
 В этом разделе вы можете следить за своим прогрессом: уровень вашего напарника Макса, ваш рейтинг и достижения.
-
-🤖 Мой Макс
-Перед началом обучения перейдите в этот раздел! Макс — ваш виртуальный напарник. Он поможет:
-
-Узнать ваши цели и предпочтения в обучении.
-Провести тестирование по предмету, чтобы подобрать индивидуальный маршрут.
-Ответить на вопросы, разобрать сложные темы и поддержать вас в обучении.
-Желаем увлекательного и продуктивного обучения! Если что-то будет непонятно, не стесняйтесь обращаться за помощью! 😊
+<b>🤖 Мой Макс</b>
+Перед началом обучения перейдите в этот раздел! Макс — ваш виртуальный напарник
     """
     media = MediaGroupBuilder(caption=caption)
     photos = os.listdir('src/pics/confirmed_student_start')
@@ -539,7 +578,7 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
         media.add_photo(
             media=FSInputFile(f'src/pics/confirmed_student_start/{photo}')
         )
-    if data.get('username') is not None:
+    if username is not None:
         user = await get_user_by_username(data.get('username'))
         await update_user_role(user.telegram_id, 'confirmed_student')
         await add_product_to_user(user.telegram_id, data.get('category'))
@@ -560,6 +599,8 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
             text='Ты в главном меню',
             reply_markup=confirmed_student
         )
+    if data.get('discount') is not None:
+        await add_count()
     try:
         os.remove(agreement)
     except Exception as err:

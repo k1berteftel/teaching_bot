@@ -23,7 +23,7 @@ class GroupCallbackMiddleware(BaseMiddleware):
         if isinstance(event, CallbackQuery):
             chat_id = event.message.chat.id
             callback_data = event.data
-            if chat_id == self.group_id_recruiter:
+            if chat_id == self.group_id_recruiter or chat_id == self.group_id_application:
                 if callback_data in self.allowed_callback_data or callback_data.startswith("candidate|") or callback_data.startswith('teacher|'):
                     return await handler(event, data)
             return await handler(event, data)

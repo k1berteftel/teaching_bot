@@ -35,7 +35,7 @@ student_menu_keyboard = InlineKeyboardMarkup(inline_keyboard=[
 confirmed_student = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Поддержка', callback_data='support')],
     [InlineKeyboardButton(text='Техническая поддержка', callback_data='support|student')],
-    [InlineKeyboardButton(text='Мой учитель', callback_data='my_teachers')],
+    [InlineKeyboardButton(text='Мой учителя', callback_data='my_teachers')],
     [InlineKeyboardButton(text='Мой прогресс', callback_data='my_progress')],
     [InlineKeyboardButton(text='Мой Макс', callback_data='gamification')],
 ])
