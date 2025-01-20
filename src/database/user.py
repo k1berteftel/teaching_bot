@@ -18,16 +18,11 @@ async def get_user_partners(telegram_id: int) -> list[dict] | None:
         user = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
         user = user.scalar_one_or_none()
         datas = []
-        print(user.__dict__)
-        print(user.partner)
         for asso in user.partner:
             teacher_id: int = asso[1]
             teacher = await session.execute(select(UserModel).where(UserModel.telegram_id == teacher_id))
             teacher = teacher.scalar_one_or_none()
-            print(teacher.__dict__)
-            print(user.subscribed_products)
             for product in user.subscribed_products:
-                print(product.__dict__)
                 if product.subject in [prd.subject for prd in teacher.subscribed_products]:
                     datas.append({
                         'user_id': teacher_id,
@@ -41,10 +36,10 @@ async def add_partner_to_user(user_id: int, partner_id: int):
     async with async_session_maker() as session:
         user = await session.execute(select(UserModel).where(UserModel.telegram_id == user_id))
         user = user.scalar_one_or_none()
-        print(user.__dict__)
-        partner = [[user_id, partner_id]]
+        partner = user.partner if user.partner else [[user_id, partner_id]]
         if user.partner and [user.telegram_id, partner_id] not in user.partner:
-            partner = user.partner.append([user.telegram_id, partner_id])
+            user.partner.append([user.telegram_id, partner_id])
+            partner = user.partner
         print(partner)
         await session.execute(update(UserModel).where(UserModel.telegram_id == user_id).values(
             partner=partner

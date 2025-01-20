@@ -5,7 +5,7 @@ from asyncio import run
 from aiogram import Bot, Dispatcher
 from loguru import logger
 
-from src.database import update_user_role
+from src.database import update_user_role, create_counter
 from src import student_router, start_router, learning_router, subject_router, admin_router, teacher_router, \
     menu_router, support_router, interview_router, product_router, interview_questions_router, back_subject_router, \
     confirmed_student_router
@@ -50,6 +50,7 @@ logger.add("bot_log.log", rotation="10 MB")
 async def bot_start():
     await create_tables()
     #await update_user_role(7365313189, 'student')
+    await create_counter()
     logger.info("Bot is starting...")
     try:
         dp.include_routers(

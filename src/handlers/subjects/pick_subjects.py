@@ -81,7 +81,12 @@ individual_prices = {
 }
 
 
+counter = 0
+
+
 def get_price(lessons: int, training_type: str) -> int | None:
+    if lessons == 9999:
+        return 10
     if lessons not in [8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128]:
         return None
 
@@ -282,6 +287,8 @@ async def confirm_contract(msg: Message, state: FSMContext):
         return
     data = await state.get_data()
     price = get_price(trainings, data.get('training_type'))
+    if price == 10:
+        await msg.answer('<b>тестовая цена</b>')
     if price is None:
         await msg.answer('Кол-во занятий должно соответствовать выбранному покету занятий, пожалуйста попробуйте снова')
         return

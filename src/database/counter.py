@@ -8,7 +8,7 @@ from .models import CounterTable
 
 async def create_counter():
     async with async_session_maker() as session:
-        await session.execute(insert(CounterTable))
+        await session.execute(insert(CounterTable).values(promos=0))
         await session.commit()
 
 
@@ -23,4 +23,5 @@ async def add_count():
 async def get_count() -> int:
     async with async_session_maker() as session:
         count = await session.scalar(select(CounterTable.promos))
+        print(count)
     return count

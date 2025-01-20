@@ -51,4 +51,4 @@ class ProductModel(Base):
 
 class CounterTable(Base):
     __tablename__ = 'counter'
-    promos = Column(String, default=0)
+    promos = Column(Integer, default=0)
