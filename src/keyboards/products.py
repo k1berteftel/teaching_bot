@@ -10,6 +10,7 @@ subjects = InlineKeyboardMarkup(inline_keyboard=[
 
 async def language_categories_builder(categories_list):
     builder = InlineKeyboardBuilder()
+    builder.max_width = 1
     for category in categories_list:
         builder.button(text=category, callback_data=f"language|{category}")
     builder.row(InlineKeyboardButton(text="Назад", callback_data="subjects"))
@@ -35,6 +36,7 @@ async def products_builder(subjects_list):
 
 async def subject_categories_builder(categories_list):
     builder = InlineKeyboardBuilder()
+    builder.max_width = 1
     for category in categories_list:
         builder.button(text=category, callback_data=f"school_subject|{category}")
     builder.row(InlineKeyboardButton(text="Назад", callback_data="subjects"))

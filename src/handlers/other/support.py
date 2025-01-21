@@ -16,7 +16,6 @@ TEACHER_GROUP_ID = int(getenv('TEACHER_GROUP_ID'))
 METHODICAL_GROUP_ID = int(getenv('METHODICAL_GROUP_ID'))
 
 support_router = Router()
-print(METHODICAL_GROUP_ID)
 
 
 @support_router.message(Support.method_support_state)
@@ -26,9 +25,12 @@ async def contact_support(message: Message):
 Поступило новое обращение в методическую поддержку:        
 От кого: @{message.from_user.username}
 User id: {message.from_user.id}
-<b>Чтобы ответить на обращение нужно ответить на это сообщение от бота (reply)</b>
-
-{message.text}""")
+<b>Чтобы ответить на обращение нужно ответить на это сообщение от бота (reply)</b>""")
+    await message.bot.copy_message(
+        chat_id=METHODICAL_GROUP_ID,
+        from_chat_id=message.from_user.id,
+        message_id=message.message_id
+    )
 
 
 @support_router.message(Support.student_support_state)
@@ -38,9 +40,12 @@ async def contact_support(message: Message):
 Поступило новое обращение в поддержку:        
 От кого: @{message.from_user.username}
 User id: {message.from_user.id}
-<b>Чтобы ответить на обращение нужно ответить на это сообщение от бота (reply)</b>
-
-{message.text}""")
+<b>Чтобы ответить на обращение нужно ответить на это сообщение от бота (reply)</b>""")
+    await message.bot.copy_message(
+        chat_id=STUDENT_GROUP_ID,
+        from_chat_id=message.from_user.id,
+        message_id=message.message_id
+    )
 
 
 @support_router.message(Support.teacher_support_state)
@@ -50,9 +55,12 @@ async def contact_support(message: Message):
 Поступило новое обращение в поддержку:        
 От кого: @{message.from_user.username}
 User id: {message.from_user.id}
-<b>Чтобы ответить на обращение нужно ответить на это сообщение от бота (reply)</b>
-
-{message.text}""")
+<b>Чтобы ответить на обращение нужно ответить на это сообщение от бота (reply)</b>""")
+    await message.bot.copy_message(
+        chat_id=TEACHER_GROUP_ID,
+        from_chat_id=message.from_user.id,
+        message_id=message.message_id
+    )
 
 
 @support_router.callback_query(F.data.startswith("support"))

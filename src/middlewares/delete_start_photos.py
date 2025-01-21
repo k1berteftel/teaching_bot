@@ -12,6 +12,7 @@ class DeletePhotosMiddleware(BaseMiddleware):
             data: Dict[str, Any]
     ) -> Any:
         if isinstance(event, CallbackQuery):
+            print('middleware')
             state: FSMContext = data.get("state")
             if state:
                 user_data = await state.get_data()

@@ -40,6 +40,7 @@ async def show_teachers_chats(clb: CallbackQuery, state: FSMContext):
 
 @student_router.callback_query(F.data.startswith('chatting'))
 async def start_chatting(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
     partner_id = int(clb.data.split('|')[1])
     user = await get_user_data(partner_id)
     subject = await get_partner_subject(clb.from_user.id, partner_id)

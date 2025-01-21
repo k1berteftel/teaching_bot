@@ -428,7 +428,8 @@ async def get_receiver_mail(msg: Message, state: FSMContext):
     await state.update_data(receiver_mail=msg.text)
     keyboard = await custom_poll_builder('back_get_receiver_mail')
     await state.set_state(TrainingInput.waiting_for_username)
-    await msg.answer('Введите юзернейм пользователя на которого вы хотите приобрести обучение или "-" если '
+    await msg.answer('Введите юзернейм пользователя на которого вы хотите приобрести обучение (если вы приобретаете обучение на другой телеграмм аккаунт)'
+                     ' или "-" если '
                      'вы приобретаете на данный аккаунт\n'
                      '<em>! Важно чтобы пользователь хоть раз запускал бота</em>', reply_markup=keyboard)
 
@@ -442,7 +443,8 @@ async def get_username(msg: Message, state: FSMContext):
     if msg.text != '-':
         user = await get_user_by_username(msg.text)
         if user is None:
-            await msg.answer('Данного пользователя нет в базе данных бота, пожалуйста попробуйте снова')
+            await msg.answer('Данного пользователя нет в пользовательской базе бота, '
+                             'чтобы он там появился пожалуйста запустите с указанного юзернейма бота')
             return
         await state.update_data(username=msg.text)
     else:
@@ -580,7 +582,13 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
 Перед началом обучения перейдите в этот раздел! Макс — ваш виртуальный напарник
     """
     media = MediaGroupBuilder(caption=caption)
-    photos = os.listdir('src/pics/confirmed_student_start')
+    #photos = os.listdir('src/pics/confirmed_student_start')
+    photos = [
+        'статус ученик 1.png',
+        'статус ученик 2.png',
+        'статус ученик 3.png',
+        'статус ученик 4.png'
+    ]
     for photo in photos:
         media.add_photo(
             media=FSInputFile(f'src/pics/confirmed_student_start/{photo}')

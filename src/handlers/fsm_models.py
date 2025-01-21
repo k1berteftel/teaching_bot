@@ -71,3 +71,7 @@ class PartnerChatting(Base):
 
 class Promo(Base):
     waiting = State()
+
+
+class Homework(Base):
+    send = State()

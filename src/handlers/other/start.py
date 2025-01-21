@@ -28,7 +28,6 @@ async def get_id(message: Message):
 
 @start_router.message(CommandStart())
 async def start_handler(message: Message, state: FSMContext):
-    user = await get_user_data(message.from_user.id)
     try:
         await message.bot.edit_message_reply_markup(chat_id=message.from_user.id, message_id=message.message_id - 1)
     except Exception:

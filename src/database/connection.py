@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from dotenv import load_dotenv
 from os import getenv
 
-from .models import Base
 
 load_dotenv()
 DB_USER=getenv('DB_USER')
@@ -12,6 +11,7 @@ DB_PASSWORD=getenv('DB_PASSWORD')
 DB_HOST=getenv('DB_HOST')
 DB_PORT=getenv('DB_PORT')
 DB_NAME=getenv('DB_NAME')
+
 
 DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 #DATABASE_URL = 'postgresql+asyncpg://quest:quest@127.0.0.1:5432/data'

@@ -34,7 +34,7 @@ dp.message.middleware.register(GroupMessageMiddleware(
 ))
 
 
-dp.callback_query.middleware.register(GroupCallbackMiddleware(
+dp.callback_query.outer_middleware.register(GroupCallbackMiddleware(
     group_id_student=int(STUDENT_GROUP_ID),
     group_id_teacher=int(TEACHER_GROUP_ID),
     group_id_recruiter=int(RECRUITERS_GROUP_ID),
@@ -50,7 +50,7 @@ logger.add("bot_log.log", rotation="10 MB")
 async def bot_start():
     await create_tables()
     #await update_user_role(7365313189, 'student')
-    await create_counter()
+    #await create_counter()
     logger.info("Bot is starting...")
     try:
         dp.include_routers(

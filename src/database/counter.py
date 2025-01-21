@@ -14,8 +14,9 @@ async def create_counter():
 
 async def add_count():
     async with async_session_maker() as session:
+        count = await session.scalar(select(CounterTable.promos))
         await session.execute(update(CounterTable).values(
-            promos=CounterTable.promos + 1
+            promos=int(count) + 1
         ))
         await session.commit()
 
@@ -23,5 +24,4 @@ async def add_count():
 async def get_count() -> int:
     async with async_session_maker() as session:
         count = await session.scalar(select(CounterTable.promos))
-        print(count)
-    return count
+    return int(count)
