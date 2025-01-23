@@ -8,7 +8,7 @@ from loguru import logger
 from src.database import update_user_role, create_counter
 from src import student_router, start_router, learning_router, subject_router, admin_router, teacher_router, \
     menu_router, support_router, interview_router, product_router, interview_questions_router, back_subject_router, \
-    confirmed_student_router
+    confirmed_student_router, survey_router, homework_router
 from src import create_tables
 from src import UserCheckMiddleware, GroupMessageMiddleware, GroupCallbackMiddleware, DeletePhotosMiddleware
 
@@ -34,7 +34,7 @@ dp.message.middleware.register(GroupMessageMiddleware(
 ))
 
 
-dp.callback_query.outer_middleware.register(GroupCallbackMiddleware(
+dp.callback_query.middleware.register(GroupCallbackMiddleware(
     group_id_student=int(STUDENT_GROUP_ID),
     group_id_teacher=int(TEACHER_GROUP_ID),
     group_id_recruiter=int(RECRUITERS_GROUP_ID),
@@ -58,6 +58,8 @@ async def bot_start():
             start_router,
             menu_router,
             confirmed_student_router,
+            survey_router,
+            homework_router,
             student_router,
             learning_router,
             subject_router,

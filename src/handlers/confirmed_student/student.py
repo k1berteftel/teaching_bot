@@ -8,12 +8,52 @@ from aiogram.filters import StateFilter, and_f
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.media_group import MediaGroupBuilder
 
-from src.gpt.ask import fetch_response
+from src.gpt.ask import fetch_response, get_assistant_and_thread, get_text_answer, delete_assistant_and_thread
 from src.database import UserModel, ProductModel
-from src.database.products import get_product_by_id, get_partner_subject
+from src.database.products import get_product_by_id, get_partner_subject, get_product_by_subject
+from src.database.rating import get_rating, get_subject_rating
 from src.database.user import get_user_data, get_user_products, get_user_partners
-from src.keyboards import subjects, chatting_teacher_builder, confirmed_student, stop_chatting_student, stop_chatting_teacher
-from src.handlers.fsm_models import PartnerChatting
+from src.keyboards import (subjects, chatting_teacher_builder, confirmed_student,
+                           stop_chatting_student, stop_chatting_teacher, student_subjects_builder,
+                           stop_send_homework, stop_Maks)
+from src.handlers.fsm_models import PartnerChatting, AiMaks
+
+next_level_balls = {
+    1: 70,
+    2: 200,
+    3: 400,
+    4: 650,
+    5: 950,
+    6: 1300,
+    7: 1700,
+    8: 2150,
+    9: 2650,
+    10: 3200,
+    11: 3800,
+    12: 4450,
+    13: 5150,
+    14: 5900,
+    15: 'max'
+}
+
+
+level_name = {
+    1: 'Новичок Макс',
+    2: 'Учёный ученик Макс',
+    3: 'Исследователь Макс',
+    4: 'Знаток Макс',
+    5: 'Покоритель знаний Макс',
+    6: 'Интеллектуал Макс',
+    7: 'Мастер-наставник Макс',
+    8: 'Гений Макс',
+    9: 'Мудрец Макс',
+    10: 'Ментор Макс',
+    11: 'Мудрец-стратег Макс',
+    12: 'Архитектор знаний Макс',
+    13: 'Магистр Макс',
+    14: 'Великий Макс',
+    15: 'Легенда Макс'
+}
 
 
 student_router = Router()
@@ -79,3 +119,70 @@ async def send_message_to_teacher(message: Message, state: FSMContext):
     )
 
 
+@student_router.callback_query(F.data == 'my_progress')
+async def choose_my_progress_subject(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    subjects = await get_user_products(clb.from_user.id)
+    keyboard = await student_subjects_builder([subject.subject for subject in subjects])
+    await clb.message.answer('Выберите предмет по которому вы хотели бы просмотреть свой прогресс', reply_markup=keyboard)
+
+
+@student_router.callback_query(F.data.startswith('progress'))
+async def show_my_progress(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    subject = await get_product_by_subject(clb.data.split('|')[1])
+    rating = await get_rating(clb.from_user.id, subject.subject)
+    all_rating = await get_subject_rating(subject.subject)
+    all_rating = all_rating[::-1]
+    placed = 0
+    for place in range(0, len(all_rating)):
+        if all_rating[place].telegram_id == rating.telegram_id:
+            placed = place
+            break
+    average_ball = 0
+    for homework in rating.homeworks:
+        average_ball += homework.balls
+    average_ball = round(average_ball / len(rating.homeworks), 2)
+    text = (f'<b>Ваш прогресс:</b>\n\n - Персонаж: Макс\n - Предмет: {subject.subject}\n'
+            f' - Уровень: {rating.level}, "{level_name[rating.level]}"'
+            f'\n - Баллов до следующего уровня: {rating.balls}/{next_level_balls[rating.level]}\n'
+            f' - Ваш рейтинг среди других учеников: {placed + 1}\n\n<b>Домашние работы</b>\n'
+            f' - Средний балл: {average_ball}')
+    await clb.message.answer(text, reply_markup=stop_send_homework)
+
+
+@student_router.callback_query(F.data == 'gamification')
+async def send_start_Maks(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    assistant_id, thread_id = await get_assistant_and_thread()
+    await state.update_data(assistant_id=assistant_id, thread_id=thread_id)
+    await state.set_state(AiMaks.chatting)
+    await clb.message.answer(text='Привет, Я Макс, твой виртуальный помощник по выполнению домашнего задания, '
+                                  'задавай любые вопросы, чего ты не понял, с чем тебе помочь и какие проблемы у '
+                                  'тебя возникли по ходу выполнения домашнего задания?', reply_markup=stop_Maks)
+
+
+@student_router.message(and_f(F.text, StateFilter(AiMaks.chatting)))
+async def answer_gpt(msg: Message, state: FSMContext):
+    try:
+        await msg.bot.edit_message_reply_markup(chat_id=msg.from_user.id, message_id=msg.message_id - 1)
+    except Exception:
+        ...
+    data = await state.get_data()
+    assistant_id = data.get('assistant_id')
+    thread_id = data.get('thread_id')
+    answer = await get_text_answer(msg.text, assistant_id, thread_id)
+    if answer is None:
+        await msg.answer('Ой, ой, что-то пошло не так, пожалуйста попробуйте еще раз или обратитесь в поддержку')
+        return
+    await msg.answer(answer, reply_markup=stop_Maks)
+
+
+@student_router.message(StateFilter(AiMaks.chatting))
+async def text_warning_answer(msg: Message, state: FSMContext):
+    try:
+        await msg.bot.edit_message_reply_markup(chat_id=msg.from_user.id, message_id=msg.message_id - 1)
+    except Exception:
+        ...
+    text = 'Пишите пожалуйста только текстовые сообщения, Макс еще не достаточно умный чтобы обрабатывать файлы и фотки'
+    await msg.answer(text, reply_markup=stop_Maks)

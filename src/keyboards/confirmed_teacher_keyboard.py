@@ -25,6 +25,15 @@ async def access_homework(student_id: int, subject: str) -> InlineKeyboardMarkup
     return keyboard
 
 
+async def custom_back_builder(data: str):
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='Назад', callback_data=data)]
+        ]
+    )
+    return keyboard
+
+
 stop_chatting_teacher = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text='Закрыть чат', callback_data='teacher_main_menu')]

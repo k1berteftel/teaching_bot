@@ -63,7 +63,7 @@ async def get_user_by_username(username: str) -> UserModel | None:
         return user
 
 
-async def get_user_products(telegram_id: int):
+async def get_user_products(telegram_id: int) -> list[ProductModel]:
     async with async_session_maker() as session:
         user = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
         user = user.scalar_one_or_none()

@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from os import getenv
 
 from src.handlers.fsm_models import MallingInput
-from src.keyboards import admin_panel, main_admin_builder, back_admin_builder, choose_role_builder, choose_teacher_builder
+from src.keyboards import (admin_panel, main_admin_builder, back_admin_builder,
+                           choose_role_builder, choose_teacher_builder, student_survey_builder)
 from src.middlewares import AdminMiddleware
 from src.database import get_all_users, get_user_data, add_partner_to_user
 from src.database.products import get_subject_teachers
@@ -53,6 +54,17 @@ async def add_user_teacher(clb: CallbackQuery, state: FSMContext):
     student_id = int(clb.data.split('|')[2])
     await add_partner_to_user(student_id, teacher_id)
     await add_partner_to_user(teacher_id, student_id)
+    text = ('<b>Вам добавили нового учителя</b>, чтобы помочь ему найти индивидуальный '
+            'подход к вашему обучению наш виртуальный помощник Макс просит вас '
+            'пройти небольшой опрос, который поможет нам выявить цели вашего обучения, '
+            'поможет составить план рекомендации и поможет придумать лично к '
+            'вам индивидуальный подход обучения')
+    keyboard = await student_survey_builder(teacher_id)
+    await clb.bot.send_message(
+        chat_id=student_id,
+        text=text,
+        reply_markup=keyboard
+    )
     await clb.answer('Учитель был успешно добавлен ученику')
 
 

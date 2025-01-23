@@ -363,8 +363,13 @@ async def get_ege_pdf(message: Message, state: FSMContext):
     if message.text != "-" and message.document:
         document = message.document
 
-        file_info = await message.bot.get_file(document.file_id)
-        file_path = file_info.file_path
+        try:
+            file_info = await message.bot.get_file(document.file_id)
+            file_path = file_info.file_path
+        except Exception as err:
+            print(err)
+            await message.answer('Размер файла не может превышать 40мб, пожалуйста попробуйте снова')
+            return
 
         if not file_path.endswith('.pdf'):
             await message.answer("Пожалуйста, отправьте файл с расширением .pdf.")
@@ -417,8 +422,13 @@ async def get_hhru_pdf(message: Message, state: FSMContext):
     if message.text != "-" and message.document:
         document = message.document
 
-        file_info = await message.bot.get_file(document.file_id)
-        file_path = file_info.file_path
+        try:
+            file_info = await message.bot.get_file(document.file_id)
+            file_path = file_info.file_path
+        except Exception as err:
+            print(err)
+            await message.answer('Размер файла не может превышать 40мб, пожалуйста попробуйте снова')
+            return
 
         if not file_path.endswith('.pdf'):
             await message.answer("Пожалуйста, отправьте файл с расширением .pdf.")
@@ -472,8 +482,13 @@ async def get_education_pdf(message: Message, state: FSMContext):
     if message.text != "-" and message.document:
         document = message.document
 
-        file_info = await message.bot.get_file(document.file_id)
-        file_path = file_info.file_path
+        try:
+            file_info = await message.bot.get_file(document.file_id)
+            file_path = file_info.file_path
+        except Exception as err:
+            print(err)
+            await message.answer('Размер файла не может превышать 40мб, пожалуйста попробуйте снова')
+            return
 
         if not file_path.endswith('.pdf'):
             await message.answer("Пожалуйста, отправьте файл с расширением .pdf.")

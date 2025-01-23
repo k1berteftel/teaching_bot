@@ -75,3 +75,16 @@ class Promo(Base):
 
 class Homework(Base):
     send = State()
+    waiting_for_accordance = State()
+    waiting_for_accuracy = State()
+    waiting_for_quality = State()
+    waiting_for_knowledge = State()
+    waiting_for_independence = State()
+
+
+class AiMaks(Base):
+    chatting = State()
+
+
+class StudentSurvey(Base):
+    collecting = State()

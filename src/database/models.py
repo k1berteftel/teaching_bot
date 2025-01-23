@@ -1,4 +1,6 @@
-from sqlalchemy import String, BigInteger, Integer, Table, Column, ForeignKey, Float, ARRAY
+import datetime
+
+from sqlalchemy import String, BigInteger, Integer, Table, Column, ForeignKey, Float, ARRAY, DATETIME
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,12 +20,13 @@ user_product_association = Table(
 
 class UserModel(Base):
     __tablename__ = "users"
-    telegram_id = Column(BigInteger)
+    telegram_id = Column(BigInteger, unique=True)
     username = Column(String, nullable=False)
     name = Column(String, default="")
     role = Column(String, default="")
     partner = Column(ARRAY(BigInteger), nullable=True, default=[])
 
+    rating = relationship('Rating', back_populates='user', lazy="selectin")
     subscribed_products = relationship(
         "ProductModel",
         secondary=user_product_association,
@@ -47,6 +50,26 @@ class ProductModel(Base):
         back_populates="subscribed_products",
         lazy="selectin"
     )
+
+
+class Rating(Base):
+    __tablename__ = 'rating'
+    telegram_id = Column(BigInteger, ForeignKey('users.telegram_id'))
+    balls = Column(Integer, nullable=False, default=0)
+    subject = Column(String, nullable=False)
+    level = Column(Integer, default=1)
+    user = relationship('UserModel', back_populates='rating', lazy="selectin")
+
+    homeworks = relationship('Homeworks', back_populates='place', lazy="selectin")
+
+
+class Homeworks(Base):
+    __tablename__ = 'homeworks'
+    rating_id = Column(ForeignKey('rating.id'))
+    balls = Column(Integer, nullable=False)
+    subject = Column(String, nullable=False)
+
+    place = relationship('Rating', back_populates='homeworks', lazy="selectin")
 
 
 class CounterTable(Base):

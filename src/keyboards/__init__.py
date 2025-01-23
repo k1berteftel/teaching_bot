@@ -9,6 +9,9 @@ from .products import subjects, language_categories_builder, products_builder, p
     choose_lessons_builder, confirm_contract_builder, user_name_builder, contract_builder, close_quiz_builder, payment_builder, \
     custom_poll_builder, promo_close_keyboard
 from .back import student_menu_back, teacher_menu_back, back_to_resume
-from .confirmed_teacher_keyboard import confirmed_teacher_agreement_keyboard, chatting_student_builder, stop_chatting_teacher, access_homework
-from .student import chatting_teacher_builder, stop_chatting_student, homework_teacher_builder, stop_send_homework
+from .confirmed_teacher_keyboard import confirmed_teacher_agreement_keyboard, chatting_student_builder, stop_chatting_teacher, access_homework, \
+    custom_back_builder
+from .student import (chatting_teacher_builder, stop_chatting_student,
+                      homework_teacher_builder, stop_send_homework, student_subjects_builder,
+                      stop_Maks, student_survey_builder, back_survey)
 from .admin import *

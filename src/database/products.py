@@ -7,6 +7,12 @@ from .connection import async_session_maker
 from .models import UserModel, ProductModel
 
 
+async def get_product_by_subject(subject: str) -> ProductModel:
+    async with async_session_maker() as session:
+        product = await session.scalar(select(ProductModel).where(ProductModel.subject == subject))
+    return product
+
+
 async def get_partner_subject(telegram_id: int, partner_id: int) -> ProductModel:
     async with async_session_maker() as session:
         user = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))

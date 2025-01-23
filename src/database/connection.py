@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from dotenv import load_dotenv
 from os import getenv
 
+from .models import Base
+
 
 load_dotenv()
 DB_USER=getenv('DB_USER')

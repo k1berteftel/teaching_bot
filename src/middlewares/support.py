@@ -20,11 +20,7 @@ class GroupCallbackMiddleware(BaseMiddleware):
                        event: Any,
                        data: Dict[str, Any]) -> Any:
         # Проверяем тип события и обрабатываем для CallbackQuery
-        print('success middleware')
         if isinstance(event, CallbackQuery):
-            print(event.chat_instance)
-            print(event.bot.session.middleware.__dict__)
-            print(event.message)
             chat_id = event.message.chat.id
             callback_data = event.data
             if chat_id == self.group_id_recruiter or chat_id == self.group_id_application:
@@ -45,7 +41,6 @@ class GroupMessageMiddleware(BaseMiddleware):
                        handler: Callable[[Any, Dict[str, Any]], Awaitable[Any]],
                        event: Any,
                        data: Dict[str, Any]) -> Any:
-        print(type(event))
         if isinstance(event, Message):
             print("Instance")
             chat_id = event.chat.id

@@ -72,7 +72,7 @@ async def contact_support(call: CallbackQuery, state: FSMContext):
         await state.set_state(Support.method_support_state)
     elif user.role in ["teacher", "confirmed_teacher"]:
         await state.set_state(Support.teacher_support_state)
-    if user.role == "student":
+    if user.role == "student" or user.role == "confirmed_student":
         await state.set_state(Support.student_support_state)
 
     keyboard = exit_support
@@ -96,7 +96,10 @@ async def contact_support(call: CallbackQuery, state: FSMContext):
                 ])
             else:
                 keyboard = back_from_support_to_interview
-
+    elif user.role == 'confirmed_student':
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Выйти из чата с поддержкой", callback_data="back_student_menu")]
+        ])
     await call.message.edit_text(
         "Напиши своё обращение в поддержку ниже. "
         "Чтобы общаться с оператором в рамках бота не выходи в меню, и не нажимай на любые кнопки в боте.",
