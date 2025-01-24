@@ -129,9 +129,12 @@ async def choose_my_progress_subject(clb: CallbackQuery, state: FSMContext):
 
 @student_router.callback_query(F.data.startswith('progress'))
 async def show_my_progress(clb: CallbackQuery, state: FSMContext):
-    await clb.message.delete()
     subject = await get_product_by_subject(clb.data.split('|')[1])
     rating = await get_rating(clb.from_user.id, subject.subject)
+    if rating is None:
+        await clb.message.answer('Пока что у вас нету прогресса по этому предмету')
+        return
+    await clb.message.delete()
     all_rating = await get_subject_rating(subject.subject)
     all_rating = all_rating[::-1]
     placed = 0

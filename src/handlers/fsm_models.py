@@ -26,6 +26,7 @@ class Support(Base):
     student_support_state = State()
     teacher_support_state = State()
     method_support_state = State()
+    student_tech_support_state = State()
     get_message_to_send = State()
 
 

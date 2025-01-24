@@ -78,6 +78,7 @@ async def get_user_recommendations(msg: Message, state: FSMContext):
 В учебном плане дай пометку учителю на каких темах ученику нужно уделить больше внимания и почему  
     Вот вопросы на которые отвечал ученик:\n{formatted_questions}\n
     Вот ответы ученика на данные вопросы:\n {data.get('answers')}\nТвоя задача дать ученику рекомендации по оптимальному для ученика количеству занятий в месяц
+Пришли ответ в формате: номер дня - тема
 '''
         answer = await fetch_response(prompt)
         await state.set_state(None)
@@ -85,13 +86,14 @@ async def get_user_recommendations(msg: Message, state: FSMContext):
         await msg.bot.send_message(chat_id=teacher_id, text=answer) # Поделить текст на несколько сообщений
         await msg.answer('Вы успешно ответили на все вопросы нашего виртуального помощника, '
                          'спасибо что помогаете нам совершенствовать наши методы обучения')
+        await msg.answer('Вы в главном меню', reply_markup=confirmed_student)
         return
     questions = data.get('questions')
     answers = data.get('answers', '')
     answers += f"\nВопрос: {questions[str(count)]}\n Ответ: {msg.text}\n"
     count += 1
     await state.update_data(answers=answers, count=count)
-    await msg.answer(questions[str(count)], reply_markup=back_survey)
+    await msg.answer(questions[str(count)])
 
 
 @survey_router.callback_query(and_f(F.data == 'back_survey_question', StateFilter(StudentSurvey.collecting)))
@@ -102,4 +104,4 @@ async def previous_question(clb: CallbackQuery, state: FSMContext):
     count = data.get('count')
     count -= 1
     await state.update_data(count=count)
-    await clb.message.answer(questions[str(count)], reply_markup=back_survey if count != 1 else None)
+    await clb.message.answer(questions[str(count)] if count != 1 else None)

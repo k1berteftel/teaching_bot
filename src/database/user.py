@@ -18,17 +18,18 @@ async def get_user_partners(telegram_id: int) -> list[dict] | None:
         user = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
         user = user.scalar_one_or_none()
         datas = []
-        for asso in user.partner:
-            teacher_id: int = asso[1]
-            teacher = await session.execute(select(UserModel).where(UserModel.telegram_id == teacher_id))
-            teacher = teacher.scalar_one_or_none()
-            for product in user.subscribed_products:
-                if product.subject in [prd.subject for prd in teacher.subscribed_products]:
-                    datas.append({
-                        'user_id': teacher_id,
-                        'name': teacher.name,
-                        'subject': product.subject
-                    })
+        if user.partner:
+            for asso in user.partner:
+                teacher_id: int = asso[1]
+                teacher = await session.execute(select(UserModel).where(UserModel.telegram_id == teacher_id))
+                teacher = teacher.scalar_one_or_none()
+                for product in user.subscribed_products:
+                    if product.subject in [prd.subject for prd in teacher.subscribed_products]:
+                        datas.append({
+                            'user_id': teacher_id,
+                            'name': teacher.name,
+                            'subject': product.subject
+                        })
         return datas if datas else None
 
 

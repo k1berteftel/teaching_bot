@@ -35,65 +35,6 @@ async def teacher_main_menu(call: CallbackQuery, state: FSMContext):
         await call.message.answer("Не удалось получить данные о пользователе. Пропишите команду /start ")
 
 
-@teacher_router.callback_query(F.data == "teacher")
-async def teacher_start(call: CallbackQuery, state: FSMContext):
-    print('success')
-    try:
-        await call.message.bot.delete_messages(chat_id=call.from_user.id, message_ids=[i for i in range(
-            call.message.message_id - 7, call.message.message_id)])
-    except Exception as e:
-        print(e)
-
-    await call.message.delete()
-
-    media = MediaGroupBuilder()
-
-    # ID в телеграм боте
-    # teacher_start_photos_ids = [
-    #     'AgACAgIAAxkDAAIHnGcjdqzul7rdtHGQc5otdfOs6AS5AALn4TEbeX8ZSQbbppRbC4VjAQADAgADdwADNgQ',
-    #                             'AgACAgIAAxkDAAIHnmcjdq4KzERh_cJhxNtqsTpl7L4OAALq4TEbeX8ZSUGMMUP086rzAQADAgADdwADNgQ',
-    #                             'AgACAgIAAxkDAAIHoWcjdrIaDVDwFWn5B_RiGKepcHsGAALt4TEbeX8ZSbomEjr6n5L4AQADAgADdwADNgQ',
-    #                             'AgACAgIAAxkDAAIHoGcjdrENSSPCWJ5PPB5VMVJA7Mn_AALs4TEbeX8ZSSZat3mLsz1tAQADAgADdwADNgQ',
-    #                             'AgACAgIAAxkDAAIHomcjdrRabGJh84xFPrJfl6IP7X2_AALu4TEbeX8ZSbYXbwrvklhYAQADAgADdwADNgQ',
-    #                             'AgACAgIAAxkDAAIHnWcjdq3aeu47DKVeEgWSKzLAl-kdAALo4TEbeX8ZSSfp-va2QK3FAQADAgADdwADNgQ',
-    #                             'AgACAgIAAxkDAAIHn2cjdrA1y38JKDiGHtG0j8Kzd0NWAALr4TEbeX8ZSRB5WCNE4NHkAQADAgADdwADNgQ'
-    # ]
-
-    # for photo_id in teacher_start_photos_ids:
-    #     media.add(type='photo', media=photo_id)
-    
-    teacher_start_img = [
-        "src/pics/teacher_start/teacher1.png",
-        "src/pics/teacher_start/teacher2.png",
-        "src/pics/teacher_start/teacher3.png",
-        "src/pics/teacher_start/teacher4.png",
-        "src/pics/teacher_start/teacher5.png",
-        "src/pics/teacher_start/teacher6.png",
-        "src/pics/teacher_start/teacher7.png",
-    ]
-    
-    for img in teacher_start_img:
-        media.add(
-            type="photo",
-            media=FSInputFile(img)
-        )
-
-    start_photos = await call.message.answer_media_group(media=media.build())
-    await state.update_data(photos_to_delete=[msg.message_id for msg in start_photos])
-
-    is_updated = await update_user_role(telegram_id=call.from_user.id, new_role="teacher")
-    if is_updated:
-        data = await state.get_data()
-        name = data.get('name', 'пользователь')
-        await call.message.answer(f"""
-Здравствуйте, {name}, вы находитесь в главном меню.
-""", reply_markup=teacher_start_menu_keyboard)
-    else:
-        await call.message.edit_text(f"""
-Ошибка: не удалось обновить роль клиента. Обратитесь в поддержку!
-""")
-
-
 @teacher_router.callback_query(F.data == "teacher_accepted")
 async def show_agreement(call: CallbackQuery, state: FSMContext):
     user = await get_user_data(call.from_user.id)

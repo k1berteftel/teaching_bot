@@ -30,12 +30,13 @@ class GroupCallbackMiddleware(BaseMiddleware):
 
 
 class GroupMessageMiddleware(BaseMiddleware):
-    def __init__(self, group_id_student: int, group_id_teacher: int, group_id_recruiter: int, group_id_methodical: int):
+    def __init__(self, group_id_student: int, group_id_teacher: int, group_id_recruiter: int, group_id_methodical: int, group_id_technical: int):
         super().__init__()
         self.group_id_student = group_id_student
         self.group_id_teacher = group_id_teacher
         self.group_id_recruiter = group_id_recruiter
         self.group_id_methodical = group_id_methodical
+        self.group_id_technical = group_id_technical
 
     async def __call__(self,
                        handler: Callable[[Any, Dict[str, Any]], Awaitable[Any]],
@@ -54,7 +55,7 @@ class GroupMessageMiddleware(BaseMiddleware):
                 return await handler(event, data)
 
             # Логика для сообщений, адресованных боту, в группах студентов и преподавателей
-            if ((chat_id == self.group_id_student) or (chat_id == self.group_id_teacher) or (chat_id == self.group_id_methodical)) and (
+            if ((chat_id == self.group_id_student) or (chat_id == self.group_id_teacher) or (chat_id == self.group_id_methodical) or (chat_id == self.group_id_technical)) and (
                     event.reply_to_message and event.reply_to_message.from_user.id == (await event.bot.me()).id):
                 return await handler(event, data)
 

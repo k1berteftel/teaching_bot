@@ -14,6 +14,7 @@ load_dotenv()
 STUDENT_GROUP_ID = int(getenv('STUDENT_GROUP_ID'))
 TEACHER_GROUP_ID = int(getenv('TEACHER_GROUP_ID'))
 METHODICAL_GROUP_ID = int(getenv('METHODICAL_GROUP_ID'))
+TECHNICAL_GROUP_ID = int(getenv('TECHNICAL_GROUP_ID'))
 
 support_router = Router()
 
@@ -62,6 +63,20 @@ User id: {message.from_user.id}
         message_id=message.message_id
     )
 
+@support_router.message(Support.student_tech_support_state)
+async def contact_tech_support(message: Message):
+    await message.bot.send_message(
+        chat_id=TEACHER_GROUP_ID, text=f"""
+    Поступило новое обращение в тех поддержку:        
+    От кого: @{message.from_user.username}
+    User id: {message.from_user.id}
+    <b>Чтобы ответить на обращение нужно ответить на это сообщение от бота (reply)</b>""")
+    await message.bot.copy_message(
+        chat_id=TECHNICAL_GROUP_ID,
+        from_chat_id=message.from_user.id,
+        message_id=message.message_id
+    )
+
 
 @support_router.callback_query(F.data.startswith("support"))
 async def contact_support(call: CallbackQuery, state: FSMContext):
@@ -104,6 +119,24 @@ async def contact_support(call: CallbackQuery, state: FSMContext):
         "Напиши своё обращение в поддержку ниже. "
         "Чтобы общаться с оператором в рамках бота не выходи в меню, и не нажимай на любые кнопки в боте.",
         reply_markup=keyboard)
+
+
+@support_router.callback_query(F.data.startswith("tech_support"))
+async def contact_tech_support(call: CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    user = await get_user_data(telegram_id=call.from_user.id)
+    data = call.data.split("|")
+    keyboard = None
+    if user.role == 'confirmed_student':
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Выйти из чата с поддержкой", callback_data="back_student_menu")]
+        ])
+    await state.set_state(Support.student_tech_support_state)
+    await call.message.answer(
+        text=("Напиши своё обращение в поддержку ниже. "
+              "Чтобы общаться с оператором в рамках бота не выходи в меню, и не нажимай на любые кнопки в боте."),
+        reply_markup=keyboard
+    )
 
 
 @support_router.message(Command('send_message'))

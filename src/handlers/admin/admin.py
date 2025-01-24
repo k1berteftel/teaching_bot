@@ -24,9 +24,10 @@ STUDENT_GROUP_ID = int(getenv('STUDENT_GROUP_ID'))
 TEACHER_GROUP_ID = int(getenv('TEACHER_GROUP_ID'))
 METHODICAL_GROUP_ID = int(getenv('METHODICAL_GROUP_ID'))
 APPLICATION_GROUP_ID = int(getenv('APPLICATION_GROUP_ID'))
+TECHNICAL_GROUP_ID = int(getenv('TECHNICAL_GROUP_ID'))
 
 
-@admin_router.message(or_f(F.chat.id == STUDENT_GROUP_ID, F.chat.id == TEACHER_GROUP_ID, F.chat.id == METHODICAL_GROUP_ID))
+@admin_router.message(or_f(F.chat.id == STUDENT_GROUP_ID, F.chat.id == TEACHER_GROUP_ID, F.chat.id == METHODICAL_GROUP_ID, F.chat.id == TECHNICAL_GROUP_ID))
 async def handle_group_message(message: Message):
     if message.reply_to_message and message.reply_to_message.from_user.id == (await message.bot.me()).id:
         original_message = message.reply_to_message.text

@@ -19,7 +19,8 @@ STUDENT_GROUP_ID = getenv('STUDENT_GROUP_ID')
 TEACHER_GROUP_ID = getenv('TEACHER_GROUP_ID')
 RECRUITERS_GROUP_ID = getenv('RECRUITERS_GROUP_ID')
 METHODICAL_GROUP_ID = getenv('METHODICAL_GROUP_ID')
-APPLICATION_GROUP_ID = (getenv('APPLICATION_GROUP_ID'))
+APPLICATION_GROUP_ID = getenv('APPLICATION_GROUP_ID')
+TECHNICAL_GROUP_ID = getenv('TECHNICAL_GROUP_ID')
 
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
@@ -31,6 +32,7 @@ dp.message.middleware.register(GroupMessageMiddleware(
     group_id_teacher=int(TEACHER_GROUP_ID),
     group_id_recruiter=int(RECRUITERS_GROUP_ID),
     group_id_methodical=int(METHODICAL_GROUP_ID),
+    group_id_technical=int(TECHNICAL_GROUP_ID)
 ))
 
 
@@ -49,7 +51,7 @@ logger.add("bot_log.log", rotation="10 MB")
 
 async def bot_start():
     await create_tables()
-    #await update_user_role(7365313189, 'student')
+    await update_user_role(7365313189, 'student')
     #await create_counter()
     logger.info("Bot is starting...")
     try:
