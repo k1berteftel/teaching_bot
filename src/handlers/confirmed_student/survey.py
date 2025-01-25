@@ -83,7 +83,11 @@ async def get_user_recommendations(msg: Message, state: FSMContext):
         answer = await fetch_response(prompt)
         await state.set_state(None)
         teacher_id = data.get('teacher_id')
-        await msg.bot.send_message(chat_id=teacher_id, text=answer) # Поделить текст на несколько сообщений
+        place = 0
+        for i in range(0, len(answer)):
+            if i % 4096 == 0:
+                await msg.bot.send_message(chat_id=teacher_id, text=answer[place: i]) # Поделить текст на несколько сообщений
+                place = i
         await msg.answer('Вы успешно ответили на все вопросы нашего виртуального помощника, '
                          'спасибо что помогаете нам совершенствовать наши методы обучения')
         await msg.answer('Вы в главном меню', reply_markup=confirmed_student)

@@ -64,13 +64,13 @@ async def bot_start():
             survey_router,
             homework_router,
             teacher_router,
+            interview_router,
             student_router,
             learning_router,
             subject_router,
             support_router,
             back_subject_router,
             admin_router,
-            interview_router,
             product_router
         )
         await dp.start_polling(bot)
