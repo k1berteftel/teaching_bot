@@ -24,4 +24,6 @@ async def add_count():
 async def get_count() -> int:
     async with async_session_maker() as session:
         count = await session.scalar(select(CounterTable.promos))
-    return int(count)
+        print(count)
+        print(type(count))
+    return count

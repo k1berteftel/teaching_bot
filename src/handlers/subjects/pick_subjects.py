@@ -3,6 +3,7 @@ import os
 import json
 from pprint import pformat
 from os import getenv
+from loguru import logger
 
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
@@ -181,9 +182,18 @@ async def choose_product_sub(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="subject", category=call.data.split("|")[1])
     builder: MediaGroupBuilder = MediaGroupBuilder()
-    for image in os.listdir('src/pics/subject_prices'):
+    prices = [
+        'src/pics/subject_prices/prices1.png',
+        'src/pics/subject_prices/prices2.png',
+        'src/pics/subject_prices/prices3.png',
+        'src/pics/subject_prices/prices4.png',
+        'src/pics/subject_prices/prices5.png',
+        'src/pics/subject_prices/prices6.png',
+        'src/pics/subject_prices/prices7.png',
+    ]
+    for image in prices:
         if image.endswith('png'):
-            builder.add_photo(FSInputFile(f'src/pics/subject_prices/{image}'))
+            builder.add_photo(FSInputFile(path='image'))
     keyboard = await training_type_builder('school_subjects')
     messages = []
     for msg in await call.message.answer_media_group(builder.build()):
@@ -323,6 +333,7 @@ async def confirm_contract(msg: Message, state: FSMContext):
 async def get_promo(msg: Message, state: FSMContext):
     data = await state.get_data()
     count = await get_count()
+    logger.info(count)
     if msg.text == 'EASY100' and count and count < 100:
         discount_price = get_discount_price(data.get('trainings'), data.get('price'))
         await state.update_data(price=discount_price, discount=True)

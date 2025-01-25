@@ -46,12 +46,13 @@ dp.callback_query.middleware.register(GroupCallbackMiddleware(
 
 dp.callback_query.middleware.register(DeletePhotosMiddleware())
 
-logger.add("bot_log.log", rotation="10 MB")
+logger.add("bot_log.log", rotation="10 MB", level='ERROR')
+
 
 
 async def bot_start():
     await create_tables()
-    await update_user_role(7365313189, 'student')
+    #await update_user_role(7365313189, 'student')
     #await create_counter()
     logger.info("Bot is starting...")
     try:
@@ -62,13 +63,13 @@ async def bot_start():
             confirmed_student_router,
             survey_router,
             homework_router,
+            teacher_router,
             student_router,
             learning_router,
             subject_router,
             support_router,
             back_subject_router,
             admin_router,
-            teacher_router,
             interview_router,
             product_router
         )

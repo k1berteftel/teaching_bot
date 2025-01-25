@@ -41,8 +41,8 @@ async def show_agreement(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     documents_media = MediaGroupBuilder()
 
-    for doc in listdir('./src/files/confirmed_teacher_agreement'):
-        document = FSInputFile(path=f"./src/files/confirmed_teacher_agreement/{doc}")
+    for doc in listdir('src/files/teacher_agreement'):
+        document = FSInputFile(path=f"src/files/teacher_agreement/{doc}")
         documents_media.add_document(media=document)
 
     start_photos = await call.message.answer_media_group(media=documents_media.build())

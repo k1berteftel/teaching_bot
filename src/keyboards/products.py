@@ -78,7 +78,7 @@ async def choose_lessons_builder(data):
         inline_keyboard=[
             [InlineKeyboardButton(text='Квиз', callback_data='quiz')],
             [InlineKeyboardButton(text='Поддержка', callback_data='help')],
-            [InlineKeyboardButton(text='Назад', callback_data='data')],
+            [InlineKeyboardButton(text='Назад', callback_data=data)],
             [InlineKeyboardButton(text="Главное меню", callback_data="student_main_menu")]
         ]
     )

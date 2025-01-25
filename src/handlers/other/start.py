@@ -51,13 +51,18 @@ async def start_handler(message: Message, state: FSMContext):
         # for file_id in start_photos_ids:
         #     media.add(type="photo", media=file_id)
         
-        start_img = os.listdir("src/pics/start")
+        start_img = [
+            'src/pics/start/start1.png',
+            'src/pics/start/start2.png',
+            'src/pics/start/start3.png',
+            'src/pics/start/start4.png',
+            'src/pics/start/start5.png'
+        ]
         
         for img in start_img:
-            print(img)
             media.add(
                 type="photo",
-                media=FSInputFile(path="src/pics/start/" + img)
+                media=FSInputFile(path=img)
             )
         
         await message.answer_media_group(media=media.build())
