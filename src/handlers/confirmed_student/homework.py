@@ -282,7 +282,6 @@ async def get_independence(msg: Message, state: FSMContext):
         text=text
     )
     rating = await get_rating(student_id, subject)
-    print(rating.__dict__)
     if rating is None:
         rating = await create_player(student_id, subject)
     await add_homework(student_id, balls, subject)
