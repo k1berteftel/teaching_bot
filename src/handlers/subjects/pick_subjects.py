@@ -334,10 +334,11 @@ async def get_promo(msg: Message, state: FSMContext):
     data = await state.get_data()
     count = await get_count()
     logger.info(count)
-    if msg.text == 'EASY100' and count and count < 100:
-        discount_price = get_discount_price(data.get('trainings'), data.get('price'))
-        await state.update_data(price=discount_price, discount=True)
-        await msg.answer('Промокод был успешно засчитан, вы получили скидку!')
+    if count is not None:
+        if msg.text == 'EASY100' and count < 100:
+            discount_price = get_discount_price(data.get('trainings'), data.get('price'))
+            await state.update_data(price=discount_price, discount=True)
+            await msg.answer('Промокод был успешно засчитан, вы получили скидку!')
     elif msg.text == '-':
         ...
     else:
