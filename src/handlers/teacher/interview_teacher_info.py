@@ -75,11 +75,11 @@ async def confirm_agreement(call: CallbackQuery, state: FSMContext):
     # for document_id in agreement_documents_ids:
     #     document_media.add_document(media=document_id)
     
-    agreement_docs = os.listdir('src/files/teacher_agreement_1')
+    agreement_docs = os.listdir('src/files/teacher_agreement')
     for doc in agreement_docs:
         document_media.add(
             type="document",
-            media=FSInputFile('src/files/teacher_agreement_1/' + doc)
+            media=FSInputFile('src/files/teacher_agreement/' + doc)
         )
 
     documents = await call.message.answer_media_group(media=document_media.build())

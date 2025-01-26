@@ -85,8 +85,8 @@ async def get_user_recommendations(msg: Message, state: FSMContext):
         teacher_id = data.get('teacher_id')
         place = 0
         for i in range(0, len(answer)):
-            if i % 4096 == 0:
-                await msg.bot.send_message(chat_id=teacher_id, text=answer[place: i]) # Поделить текст на несколько сообщений
+            if i % 4096 == 0 or i == len(answer) - 1:
+                await msg.bot.send_message(chat_id=teacher_id, text=answer[place:i:]) # Поделить текст на несколько сообщений
                 place = i
         await msg.answer('Вы успешно ответили на все вопросы нашего виртуального помощника, '
                          'спасибо что помогаете нам совершенствовать наши методы обучения')
