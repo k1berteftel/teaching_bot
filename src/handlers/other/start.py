@@ -105,12 +105,19 @@ async def get_name(message: Message, state: FSMContext):
             # ]
             # for photo_id in instruction_photos_ids:
             #     media.add(type="photo", media=photo_id)
-            instructions_img = os.listdir('src/pics/instructions')
+            instructions_img = [
+                'src/pics/instructions/instruction1.png',
+                'src/pics/instructions/instruction2.png',
+                'src/pics/instructions/instruction3.png',
+                'src/pics/instructions/instruction4.png',
+                'src/pics/instructions/instruction5.png',
+                'src/pics/instructions/instruction6.png',
+                'src/pics/instructions/instruction7.png',
+            ]
             for img in instructions_img:
-                print(img, 'src/pics/instructions/' + img)
                 media.add(
                     type="photo",
-                    media=FSInputFile(path='src/pics/instructions/' + img)
+                    media=FSInputFile(path=img)
                 )
 
             await message.answer_media_group(media=media.build())
