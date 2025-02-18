@@ -19,7 +19,7 @@ from src.database import update_user_role, get_user_data, add_product_to_user, g
 from src.keyboards import subjects, subject_categories_builder, products_builder, product_actions_keyboard, \
     student_menu_back, language_categories_builder, training_type_builder, choose_lessons_builder, confirm_contract_builder, \
     user_name_builder, contract_builder, close_quiz_builder, payment_builder, custom_poll_builder, choose_teacher_builder, \
-    choose_teacher_builder, confirmed_student, promo_close_keyboard
+    choose_teacher_builder, confirmed_student, promo_close_keyboard, stop_analysis
 from src.payment.tbank_pay import init_payment, check_payment
 
 from docx import Document
@@ -228,8 +228,22 @@ async def choose_training_type(call: CallbackQuery, state: FSMContext):
 
 @subject_router.callback_query(F.data == 'quiz')
 async def quiz_dialog(call: CallbackQuery, state: FSMContext):
-    await state.set_state(AIChat.chatting)
     await call.message.delete()
+    text = '''👋 Привет! Я Макс, твой умный помощник в easyknow.
+Перед тем как начать занятия, давай разберемся, какой формат обучения подойдет тебе лучше всего!
+📊 Easy-анализ поможет определить: 
+    ✅ Твой стартовый уровень по предмету. 
+    ✅ Твою цель в обучении. 
+    ✅ Как ты лучше воспринимаешь информацию (на слух, глазами, через практику и т. д.). 
+    ✅ Какой у тебя тип и скорость усвоения информации. 
+      
+🚀 <b>После теста я подготовлю для тебя персональную рекомендацию</b>: 
+Сколько и как лучше заниматься, какие методы использовать и как сделать учебу эффективной и удобной именно для тебя! 
+<b>Готов начать? Тогда поехали! </b>⏳💡  
+    '''
+
+    #  ___
+
     data = await state.get_data()
     prompt = (f'''Ты - методист школы. Твоя задача помочь ученику выбрать оптимальное количество занятий, чтобы заниматься и дать рекомендации после прохождения опроса. 
 Учти что мы онлайн-школа.
@@ -255,8 +269,46 @@ async def quiz_dialog(call: CallbackQuery, state: FSMContext):
         return
     count = 1
     await state.update_data(questions=questions, count=count)
+    #questions[str(count)]
+
+    #  ___
     keyboard = await close_quiz_builder(f'training_type|{data.get("training_type")}')
-    await call.message.answer(questions[str(count)], reply_markup=keyboard)
+    await call.message.answer(text, reply_markup=keyboard)
+
+
+@subject_router.callback_query(F.data == 'start_analysis')
+async def start_get_recommendation(clb: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow. 
+    Твоя задача — провести интерактивный тест 'easy-анализ' для ученика перед оплатой занятий. 
+    Этот тест должен помочь определить: 
+    1. его стартовый уровень по предмету, 
+    2. цель обучения, 
+    3. способ восприятия информации (визуальный, аудиальный, кинестетический, смешанный и др.), 
+    4. тип усвоения информации (логический, ассоциативный, структурный и др.), 
+    5. скорость усвоения информации (быстрая, средняя, медленная). 
+    Тест состоит из единого потока вопросов, на который ученик отвечает последовательно. 
+    Верни вопросы в формате JSON (БЕЗ РАЗМЕТОК, ПРОСТО ФИГУРНЫЕ СКОБКИ - ЭТО ВАЖНО), где каждый вопрос обозначен ключом от 1 до 10:
+    {{
+         "1": "вопрос 1",
+         "2": "вопрос 2",
+         ...
+         "10": "вопрос 10"
+    }}''')
+    response = await fetch_response(prompt)
+    if not response:
+        await clb.message.answer("Ошибка при генерации вопросов. Попробуйте снова.")
+        return
+    try:
+        questions = json.loads(response)
+    except json.JSONDecodeError or TypeError as err:
+        print(err)
+        await clb.message.answer("Ошибка при генерации вопросов. Попробуйте снова.")
+        return
+    count = 1
+    await state.update_data(questions=questions, count=count)
+    keyboard = await stop_analysis(f'training_type|{data.get("training_type")}')
+    await clb.message.answer(questions[str(count)], reply_markup=keyboard)
 
 
 @subject_router.message(StateFilter(AIChat.chatting))
@@ -269,10 +321,18 @@ async def get_recommendation(msg: Message, state: FSMContext):
     count = data.get('count')
     if count == 10:
         formatted_questions = pformat(data.get('questions'))
-        prompt = (f'''Ты - методист школы. Твоя задача помочь ученику выбрать оптимальное количество занятий, 
-чтобы заниматься и дать рекомендации после прохождения опроса. Учти что мы онлайн-школа.\n
+        prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow.
+Твоя задача выдать персонализированную и детальную рекомендацию по обучению. 
+Эта рекомендация должна включать: 
+1. Выводы по стартовому уровню ученика. 
+2. Оптимальное количество занятий в неделю для достижения цели. 
+3. Рекомендованный формат занятий (индивидуальные, групповые, интенсивные и т. д.). 
+4. Методы, которые лучше всего подойдут ученику в зависимости от его стиля восприятия и типа усвоения информации. 
+5. Рекомендации по адаптации темпа обучения в зависимости от скорости усвоения информации. 
+6.Советы по повышению эффективности обучения. 
+7. Индивидуальный план обучения со списком тем и домашним заданиям\n
 Вот вопросы на которые отвечал ученик:\n{formatted_questions}\n
-Вот ответы ученика на данные вопросы:\n {data.get('answers')}\nТвоя задача дать ученику рекомендации по оптимальному для ученика количеству занятий в месяц''')
+Вот ответы ученика на данные вопросы:\n {data.get('answers')}''')
         answer = await fetch_response(prompt)
         keyboard = await close_quiz_builder(f'training_type|{data.get("training_type")}')
         await state.set_state(None)

@@ -8,6 +8,16 @@ subjects = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 
+async def stop_analysis(data) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='Закончить тест', callback_data=data)]
+        ]
+    )
+    return keyboard
+
+
+
 async def language_categories_builder(categories_list):
     builder = InlineKeyboardBuilder()
     builder.max_width = 1
@@ -76,7 +86,7 @@ async def training_type_builder(data):
 async def choose_lessons_builder(data):
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='Квиз', callback_data='quiz')],
+            [InlineKeyboardButton(text='📊EASY-анализ', callback_data='quiz')],
             [InlineKeyboardButton(text='Поддержка', callback_data='help')],
             [InlineKeyboardButton(text='Назад', callback_data=data)],
             [InlineKeyboardButton(text="Главное меню", callback_data="student_main_menu")]
@@ -133,6 +143,7 @@ async def custom_poll_builder(data):
 async def close_quiz_builder(data):
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
+            [InlineKeyboardButton(text='Начать', callback_data='start_analysis')],
             [InlineKeyboardButton(text='Назад', callback_data=data)]
         ]
     )

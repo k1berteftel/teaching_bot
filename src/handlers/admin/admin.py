@@ -6,12 +6,13 @@ from aiogram.types import Message, CallbackQuery
 from dotenv import load_dotenv
 from os import getenv
 
-from src.handlers.fsm_models import MallingInput
+from src.handlers.fsm_models import MallingInput, TeachersInput
 from src.keyboards import (admin_panel, main_admin_builder, back_admin_builder,
-                           choose_role_builder, choose_teacher_builder, student_survey_builder)
+                           choose_role_builder, choose_teacher_builder, student_survey_builder, teachers_manage_builder,
+                           teachers_menu, choose_teacher_product_builder, teacher_products_builder, candidate_result)
 from src.middlewares import AdminMiddleware
-from src.database import get_all_users, get_user_data, add_partner_to_user
-from src.database.products import get_subject_teachers
+from src.database import get_all_users, get_user_data, add_partner_to_user, update_user_data, update_user_role, add_product_to_user, get_user_products
+from src.database.products import get_subject_teachers, get_all_languages, get_all_subjects, get_product_by_id
 
 admin_router = Router()
 
@@ -159,6 +160,130 @@ async def start_malling(message: Message, state: FSMContext):
         text='Полная админ панель',
         reply_markup=keyboard
     )
+
+
+@admin_router.callback_query(F.data == 'teachers_management')
+async def teachers_management_menu(clb: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await clb.message.delete()
+    text = 'Выберите действия которые вы хотели бы сделать с учителями'
+    keyboard = await teachers_manage_builder()
+    await clb.message.answer(text, reply_markup=keyboard)
+
+
+@admin_router.callback_query(F.data == 'add_teacher')
+async def add_teacher_send(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    await state.clear()
+    await state.set_state(TeachersInput.add_teacher_waiting)
+    await clb.message.answer(
+        text='Отправьте ID пользователя которого вы хотели бы добавить в учителей',
+        reply_markup=teachers_menu
+    )
+
+
+@admin_router.message(and_f(F.text, StateFilter(TeachersInput.add_teacher_waiting)))
+async def add_teacher_id(msg: Message, state: FSMContext):
+    await msg.delete()
+    try:
+        teacher_id = int(msg.text)
+    except Exception:
+        await msg.answer('telegram ID учителя должен быть числом, пожалуйста попробуйте снова')
+        return
+    try:
+        await msg.bot.delete_message(chat_id=msg.from_user.id, message_id=msg.message_id - 1)
+    except Exception:
+        ...
+    user = await get_user_data(teacher_id)
+    if user is None:
+        await msg.answer('Такого пользователя нету в базе пользователей, пожалуйста попробуйте снова')
+        return
+    await state.update_data(teacher_id=teacher_id)
+    await state.set_state(TeachersInput.add_teacher_product)
+    keyboard = await choose_teacher_product_builder()
+    await msg.answer('Выберите категорию которую вы хотели бы добавить учителю', reply_markup=keyboard)
+
+
+@admin_router.callback_query(and_f(F.data.startswith('teacher_set'), StateFilter(TeachersInput.add_teacher_product)))
+async def add_teacher_product(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    category = clb.data.split('|')[1]
+    await state.update_data(category=category)
+    if category == 'languages':
+        products = await get_all_languages()
+    else:
+        products = await get_all_subjects()
+    keyboard = await teacher_products_builder(products)
+    await clb.message.answer(
+        text='Выберите предмет|язык которые вы хотели бы добавить своему учителю',
+        reply_markup=keyboard
+    )
+
+
+@admin_router.callback_query(and_f(F.data.startswith('set'), StateFilter(TeachersInput.add_teacher_product)))
+async def add_teacher_subject(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    data = await state.get_data()
+    teacher_id = data.get('teacher_id')
+    product_id = int(clb.data.split('_')[1])
+    user = await get_user_data(teacher_id)
+    if not user.role == 'confirmed_teacher':
+        await update_user_role(teacher_id, 'confirmed_teacher')
+    user_products = await get_user_products(teacher_id)
+    if product_id in [product.id for product in user_products]:
+        await clb.message.answer('Этот учитель уже преподает данный предмет, пожалуйста выберите другой предмет')
+        if data.get('category') == 'languages':
+            products = await get_all_languages()
+        else:
+            products = await get_all_subjects()
+        keyboard = await teacher_products_builder(products)
+        await clb.message.answer(
+            text='Выберите предмет|язык которые вы хотели бы добавить учителю',
+            reply_markup=keyboard
+        )
+        return
+    product = await get_product_by_id(product_id)
+    await add_product_to_user(teacher_id, product.subject)
+    await clb.message.answer('Предмет был успешно добавлен учителю')
+    await clb.bot.send_message(chat_id=user.telegram_id, text=f"""
+    Здравствуйте, {user.name}!   
+    Рады сообщить, что вы успешно прошли отбор в нашу команду easyknow! 🎉 
+    Мы видим, что ваши профессиональные навыки и подход к обучению отлично соответствуют нашему стремлению делать обучение интересным и доступным для наших учеников.     
+
+    С уважением, Команда easyknow          
+    """, reply_markup=(await candidate_result('accept')))
+    await state.clear()
+    text = 'Выберите действия которые вы хотели бы сделать с учителями'
+    keyboard = await teachers_manage_builder()
+    await clb.message.answer(text, reply_markup=keyboard)
+
+
+@admin_router.callback_query(F.data == 'del_teacher')
+async def send_del_teacher(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    await state.set_state(TeachersInput.del_teacher_waiting)
+    await clb.message.answer('Отправьте ID учителя которого вы хотели бы удалить', reply_markup=teachers_menu)
+
+
+@admin_router.message(and_f(F.text, StateFilter(TeachersInput.del_teacher_waiting)))
+async def del_teacher(msg: Message, state: FSMContext):
+    await msg.delete()
+    try:
+        teacher_id = int(msg.text)
+    except Exception:
+        await msg.answer('telegram ID учителя должен быть числом, пожалуйста попробуйте снова')
+        return
+    user = await get_user_data(teacher_id)
+    if user is None:
+        await msg.answer('Такого пользователя нету в базе пользователей, пожалуйста попробуйте снова')
+        return
+    await update_user_role(teacher_id, 'teacher')
+    await update_user_data(teacher_id, {'subscribed_products': []})
+    await msg.answer('Данные о пользователе были успешно обновленны')
+    await state.clear()
+    text = 'Выберите действия которые вы хотели бы сделать с учителями'
+    keyboard = await teachers_manage_builder()
+    await msg.answer(text, reply_markup=keyboard)
 
 
 @admin_router.callback_query(F.data == 'statistic')

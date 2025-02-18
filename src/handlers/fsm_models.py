@@ -65,6 +65,12 @@ class MallingInput(Base):
     waiting_for_message = State()
 
 
+class TeachersInput(Base):
+    del_teacher_waiting = State()
+    add_teacher_waiting = State()
+    add_teacher_product = State()
+
+
 class PartnerChatting(Base):
     student = State()
     teacher = State()

@@ -7,7 +7,7 @@ from .support import back_from_support_to_interview, exit_support
 from .products import subjects, language_categories_builder, products_builder, product_actions_keyboard, \
     subject_categories_builder, categories_builder, product_or_language, confirm_product_creation, training_type_builder, \
     choose_lessons_builder, confirm_contract_builder, user_name_builder, contract_builder, close_quiz_builder, payment_builder, \
-    custom_poll_builder, promo_close_keyboard
+    custom_poll_builder, promo_close_keyboard, stop_analysis
 from .back import student_menu_back, teacher_menu_back, back_to_resume
 from .confirmed_teacher_keyboard import confirmed_teacher_agreement_keyboard, chatting_student_builder, stop_chatting_teacher, access_homework, \
     custom_back_builder

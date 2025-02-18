@@ -13,6 +13,14 @@ redis_client = redis.Redis(
 )
 
 
+async def update_user_data(telegram_id: int, data: dict) -> None:
+    async with async_session_maker() as session:
+        await session.execute(update(UserModel).where(UserModel.telegram_id == telegram_id).values(
+            data
+        ))
+        await session.commit()
+
+
 async def get_user_partners(telegram_id: int) -> list[dict] | None:
     async with async_session_maker() as session:
         user = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
