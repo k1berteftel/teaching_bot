@@ -188,8 +188,7 @@ async def choose_product_sub(call: CallbackQuery, state: FSMContext):
         'src/pics/subject_prices/prices3.png',
         'src/pics/subject_prices/prices4.png',
         'src/pics/subject_prices/prices5.png',
-        'src/pics/subject_prices/prices6.png',
-        'src/pics/subject_prices/prices7.png',
+        'src/pics/subject_prices/prices6.png'
     ]
     for image in prices:
         if image.endswith('png'):
