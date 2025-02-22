@@ -144,9 +144,17 @@ async def choose_product_lang(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="language", category=call.data.split("|")[1])
     builder: MediaGroupBuilder = MediaGroupBuilder()
-    for image in os.listdir('src/pics/subject_prices'):
+    prices = [
+        'src/pics/subject_prices/prices1.png',
+        'src/pics/subject_prices/prices2.png',
+        'src/pics/subject_prices/prices3.png',
+        'src/pics/subject_prices/prices4.png',
+        'src/pics/subject_prices/prices5.png',
+        'src/pics/subject_prices/prices6.png'
+    ]
+    for image in prices:
         if image.endswith('png'):
-            builder.add_photo(media=FSInputFile(path=f'src/pics/subject_prices/{image}'))
+            builder.add_photo(media=FSInputFile(path=image))
     keyboard = await training_type_builder('languages')
     messages = []
     for msg in await call.message.answer_media_group(media=builder.build()):

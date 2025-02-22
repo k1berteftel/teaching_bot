@@ -32,6 +32,7 @@ async def start_handler(message: Message, state: FSMContext):
         await message.bot.edit_message_reply_markup(chat_id=message.from_user.id, message_id=message.message_id - 1)
     except Exception:
         ...
+    await state.clear()
 
     logger.info(f"Received /start command from user: {message.from_user.id}")
     user = await get_user_data(telegram_id=message.from_user.id)
