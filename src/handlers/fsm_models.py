@@ -50,6 +50,10 @@ class AIChat(Base):
     chatting = State()
 
 
+class AITesting(Base):
+    survey = State()
+
+
 class TrainingInput(Base):
     waiting_for_integer = State()
     waiting_for_name = State()

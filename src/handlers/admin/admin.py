@@ -11,7 +11,7 @@ from src.keyboards import (admin_panel, main_admin_builder, back_admin_builder,
                            choose_role_builder, choose_teacher_builder, student_survey_builder, teachers_manage_builder,
                            teachers_menu, choose_teacher_product_builder, teacher_products_builder, candidate_result)
 from src.middlewares import AdminMiddleware
-from src.database import get_all_users, get_user_data, add_partner_to_user, update_user_data, update_user_role, add_product_to_user, get_user_products
+from src.database import get_all_users, get_user_data, add_partner_to_user, reset_user_products, update_user_role, add_product_to_user, get_user_products
 from src.database.products import get_subject_teachers, get_all_languages, get_all_subjects, get_product_by_id
 
 admin_router = Router()
@@ -278,7 +278,7 @@ async def del_teacher(msg: Message, state: FSMContext):
         await msg.answer('Такого пользователя нету в базе пользователей, пожалуйста попробуйте снова')
         return
     await update_user_role(teacher_id, 'teacher')
-    await update_user_data(teacher_id, {'subscribed_products': []})
+    await reset_user_products(teacher_id)
     await msg.answer('Данные о пользователе были успешно обновленны')
     await state.clear()
     text = 'Выберите действия которые вы хотели бы сделать с учителями'

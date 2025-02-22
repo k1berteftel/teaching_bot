@@ -49,7 +49,6 @@ dp.callback_query.middleware.register(DeletePhotosMiddleware())
 logger.add("bot_log.log", rotation="10 MB", level='ERROR')
 
 
-
 async def bot_start():
     await create_tables()
     #await update_user_role(7365313189, 'student')

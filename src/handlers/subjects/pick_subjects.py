@@ -12,7 +12,7 @@ from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from src.gpt.ask import fetch_response
-from src.handlers.fsm_models import TrainingInput, AIChat, Promo
+from src.handlers.fsm_models import TrainingInput, AITesting, Promo
 from src.database.products import get_product_by_id, get_subject_categories, \
     get_products_by_category, get_languages_categories, get_subject_teachers
 from src.database import update_user_role, get_user_data, add_product_to_user, get_user_by_username, get_count, add_count
@@ -242,45 +242,18 @@ async def quiz_dialog(call: CallbackQuery, state: FSMContext):
 <b>Готов начать? Тогда поехали! </b>⏳💡  
     '''
 
-    #  ___
-
     data = await state.get_data()
-    prompt = (f'''Ты - методист школы. Твоя задача помочь ученику выбрать оптимальное количество занятий, чтобы заниматься и дать рекомендации после прохождения опроса. 
-Учти что мы онлайн-школа.
-Информация по предмету обучения:\nПредмет: {data.get('category')}\nТип занятий: {"Индивидуальный" if data.get('training_type') == 'individual' else "Групповые"}
-Задай ученику ряд вопросов, которые включают цели, сроки для изучения предмета, спроси про домашку и так далее. 
-Задай максимум 10 вопросов
-Верни вопросы в формате JSON (БЕЗ РАЗМЕТОК, ПРОСТО ФИГУРНЫЕ СКОБКИ - ЭТО ВАЖНО), где каждый вопрос обозначен ключом от 1 до 10:
-{{
-     "1": "вопрос 1",
-     "2": "вопрос 2",
-     ...
-     "10": "вопрос 10"
-}}''')
-    response = await fetch_response(prompt)
-    if not response:
-        await call.message.answer("Ошибка при генерации вопросов. Попробуйте снова.")
-        return
-    try:
-        questions = json.loads(response)
-    except json.JSONDecodeError or TypeError as err:
-        print(err)
-        await call.message.answer("Ошибка при генерации вопросов. Попробуйте снова.")
-        return
-    count = 1
-    await state.update_data(questions=questions, count=count)
-    #questions[str(count)]
-
-    #  ___
     keyboard = await close_quiz_builder(f'training_type|{data.get("training_type")}')
     await call.message.answer(text, reply_markup=keyboard)
 
 
 @subject_router.callback_query(F.data == 'start_analysis')
 async def start_get_recommendation(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
     data = await state.get_data()
     prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow. 
-    Твоя задача — провести интерактивный тест 'easy-анализ' для ученика перед оплатой занятий. 
+    Твоя задача — провести интерактивный тест 'easy-анализ' для ученика перед оплатой занятий.
+    Вот данные по ученику:\nПредмет обучения: {data.get('category')}\nФормат обучения: {"индивидуальный" if data.get('training_type') == "individual" else "групповой"}
     Этот тест должен помочь определить: 
     1. его стартовый уровень по предмету, 
     2. цель обучения, 
@@ -307,11 +280,12 @@ async def start_get_recommendation(clb: CallbackQuery, state: FSMContext):
         return
     count = 1
     await state.update_data(questions=questions, count=count)
+    await state.set_state(AITesting.survey)
     keyboard = await stop_analysis(f'training_type|{data.get("training_type")}')
     await clb.message.answer(questions[str(count)], reply_markup=keyboard)
 
 
-@subject_router.message(StateFilter(AIChat.chatting))
+@subject_router.message(StateFilter(AITesting.survey))
 async def get_recommendation(msg: Message, state: FSMContext):
     try:
         await msg.bot.edit_message_reply_markup(chat_id=msg.from_user.id, message_id=msg.message_id - 1)
@@ -334,7 +308,7 @@ async def get_recommendation(msg: Message, state: FSMContext):
 Вот вопросы на которые отвечал ученик:\n{formatted_questions}\n
 Вот ответы ученика на данные вопросы:\n {data.get('answers')}''')
         answer = await fetch_response(prompt)
-        keyboard = await close_quiz_builder(f'training_type|{data.get("training_type")}')
+        keyboard = await custom_poll_builder(f'training_type|{data.get("training_type")}')
         await state.set_state(None)
         await msg.answer(answer, reply_markup=keyboard)
         return
@@ -343,7 +317,7 @@ async def get_recommendation(msg: Message, state: FSMContext):
     answers += f"\nВопрос: {questions[str(count)]}\n Ответ: {msg.text}\n"
     count += 1
     await state.update_data(answers=answers, count=count)
-    keyboard = await close_quiz_builder(f'training_type|{data.get("training_type")}')
+    keyboard = await stop_analysis(f'training_type|{data.get("training_type")}')
     await msg.answer(questions[str(count)], reply_markup=keyboard)
 
 

@@ -13,11 +13,10 @@ redis_client = redis.Redis(
 )
 
 
-async def update_user_data(telegram_id: int, data: dict) -> None:
+async def reset_user_products(telegram_id: int) -> None:
     async with async_session_maker() as session:
-        await session.execute(update(UserModel).where(UserModel.telegram_id == telegram_id).values(
-            data
-        ))
+        user: UserModel = await session.scalar(select(UserModel).where(UserModel.telegram_id == telegram_id))
+        user.subscribed_products = []
         await session.commit()
 
 
