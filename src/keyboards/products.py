@@ -86,7 +86,6 @@ async def training_type_builder(data):
 async def choose_lessons_builder(data):
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='📊EASY-анализ', callback_data='quiz')],
             [InlineKeyboardButton(text='Поддержка', callback_data='help')],
             [InlineKeyboardButton(text='Назад', callback_data=data)],
             [InlineKeyboardButton(text="Главное меню", callback_data="student_main_menu")]

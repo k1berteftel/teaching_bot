@@ -143,24 +143,43 @@ async def languages(call: CallbackQuery):
 async def choose_product_lang(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="language", category=call.data.split("|")[1])
-    builder: MediaGroupBuilder = MediaGroupBuilder()
-    prices = [
-        'src/pics/subject_prices/price_1.png',
-        'src/pics/subject_prices/price_2.png',
-        'src/pics/subject_prices/price_3.png',
-        'src/pics/subject_prices/price_4.png',
-        'src/pics/subject_prices/price_5.png',
-        'src/pics/subject_prices/price_6.png'
-    ]
-    for image in prices:
-        if image.endswith('png'):
-            builder.add_photo(media=FSInputFile(path=image))
-    keyboard = await training_type_builder('languages')
-    messages = []
-    for msg in await call.message.answer_media_group(media=builder.build()):
-        messages.append(msg.message_id)
-    await state.update_data(photos_to_delete=messages)
-    await call.message.answer('Выберите формат занятий', reply_markup=keyboard)
+    data = await state.get_data()
+    if os.path.exists(f'{call.from_user.id}_{data.get("category")}.pdf'):
+        builder: MediaGroupBuilder = MediaGroupBuilder()
+        prices = [
+            'src/pics/subject_prices/price_1.png',
+            'src/pics/subject_prices/price_2.png',
+            'src/pics/subject_prices/price_3.png',
+            'src/pics/subject_prices/price_4.png',
+            'src/pics/subject_prices/price_5.png',
+            'src/pics/subject_prices/price_6.png'
+        ]
+        for image in prices:
+            if image.endswith('png'):
+                builder.add_photo(media=FSInputFile(path=image))
+        keyboard = await training_type_builder('languages')
+        messages = []
+        for msg in await call.message.answer_media_group(media=builder.build()):
+            messages.append(msg.message_id)
+        await state.update_data(photos_to_delete=messages)
+        await call.message.answer('Выберите формат занятий', reply_markup=keyboard)
+    else:
+        text = '''👋 Привет! Я Макс, твой умный помощник в easyknow. 
+        Перед тем как начать занятия, давай разберемся, какой формат обучения подойдет тебе лучше всего! 
+        📊 easy-анализ поможет определить: 
+        ✅ Твой стартовый уровень по предмету. 
+        ✅ Твою цель в обучении. 
+        ✅ Как ты лучше воспринимаешь информацию (на слух, глазами, через практику и т. д.). 
+        ✅ Какой у тебя тип и скорость усвоения информации. 
+
+        🚀 После теста я подготовлю для тебя персональную рекомендацию: сколько и как лучше заниматься, какие методы использовать и как сделать учебу эффективной и удобной именно для тебя! 
+        В тесте 21 вопрос и ориентировочное время прохождения 15-20 минут. 
+        <b>Готов начать? Тогда поехали! ⏳💡</b>    
+        '''
+
+        data = await state.get_data()
+        keyboard = await close_quiz_builder('languages')
+        await call.message.answer(text, reply_markup=keyboard)
 
     #category_products = await get_products_by_category(product_type="language", category=call.data.split("|")[1])
     #if category_products:
@@ -189,24 +208,43 @@ async def school_subjects(call: CallbackQuery):
 async def choose_product_sub(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="subject", category=call.data.split("|")[1])
-    builder: MediaGroupBuilder = MediaGroupBuilder()
-    prices = [
-        'src/pics/subject_prices/price_1.png',
-        'src/pics/subject_prices/price_2.png',
-        'src/pics/subject_prices/price_3.png',
-        'src/pics/subject_prices/price_4.png',
-        'src/pics/subject_prices/price_5.png',
-        'src/pics/subject_prices/price_6.png'
-    ]
-    for image in prices:
-        if image.endswith('png'):
-            builder.add_photo(media=FSInputFile(path=image))
-    keyboard = await training_type_builder('school_subjects')
-    messages = []
-    for msg in await call.message.answer_media_group(builder.build()):
-        messages.append(msg.message_id)
-    await state.update_data(photos_to_delete=messages)
-    await call.message.answer('Выберите формат занятий', reply_markup=keyboard)
+    data = await state.get_data()
+    if os.path.exists(f'{call.from_user.id}_{data.get("category")}.pdf'):
+        builder: MediaGroupBuilder = MediaGroupBuilder()
+        prices = [
+            'src/pics/subject_prices/price_1.png',
+            'src/pics/subject_prices/price_2.png',
+            'src/pics/subject_prices/price_3.png',
+            'src/pics/subject_prices/price_4.png',
+            'src/pics/subject_prices/price_5.png',
+            'src/pics/subject_prices/price_6.png'
+        ]
+        for image in prices:
+            if image.endswith('png'):
+                builder.add_photo(media=FSInputFile(path=image))
+        keyboard = await training_type_builder('school_subjects')
+        messages = []
+        for msg in await call.message.answer_media_group(builder.build()):
+            messages.append(msg.message_id)
+        await state.update_data(photos_to_delete=messages)
+        await call.message.answer('Выберите формат занятий', reply_markup=keyboard)
+    else:
+        text = '''👋 Привет! Я Макс, твой умный помощник в easyknow. 
+        Перед тем как начать занятия, давай разберемся, какой формат обучения подойдет тебе лучше всего! 
+        📊 easy-анализ поможет определить: 
+        ✅ Твой стартовый уровень по предмету. 
+        ✅ Твою цель в обучении. 
+        ✅ Как ты лучше воспринимаешь информацию (на слух, глазами, через практику и т. д.). 
+        ✅ Какой у тебя тип и скорость усвоения информации. 
+
+        🚀 После теста я подготовлю для тебя персональную рекомендацию: сколько и как лучше заниматься, какие методы использовать и как сделать учебу эффективной и удобной именно для тебя! 
+        В тесте 21 вопрос и ориентировочное время прохождения 15-20 минут. 
+        <b>Готов начать? Тогда поехали! ⏳💡</b>    
+        '''
+
+        data = await state.get_data()
+        keyboard = await close_quiz_builder('school_subjects')
+        await call.message.answer(text, reply_markup=keyboard)
 
     #category_products = await get_products_by_category(product_type="subject", category=call.data.split("|")[1])
     #if category_products:
@@ -233,48 +271,28 @@ async def choose_training_type(call: CallbackQuery, state: FSMContext):
     await call.message.answer(text, reply_markup=keyboard)
 
 
-@subject_router.callback_query(F.data == 'quiz')
-async def quiz_dialog(call: CallbackQuery, state: FSMContext):
-    await call.message.delete()
-    text = '''👋 Привет! Я Макс, твой умный помощник в easyknow.
-Перед тем как начать занятия, давай разберемся, какой формат обучения подойдет тебе лучше всего!
-📊 Easy-анализ поможет определить: 
-    ✅ Твой стартовый уровень по предмету. 
-    ✅ Твою цель в обучении. 
-    ✅ Как ты лучше воспринимаешь информацию (на слух, глазами, через практику и т. д.). 
-    ✅ Какой у тебя тип и скорость усвоения информации. 
-      
-🚀 <b>После теста я подготовлю для тебя персональную рекомендацию</b>: 
-Сколько и как лучше заниматься, какие методы использовать и как сделать учебу эффективной и удобной именно для тебя! 
-<b>Готов начать? Тогда поехали! </b>⏳💡  
-    '''
-
-    data = await state.get_data()
-    keyboard = await close_quiz_builder(f'training_type|{data.get("training_type")}')
-    await call.message.answer(text, reply_markup=keyboard)
-
-
 @subject_router.callback_query(F.data == 'start_analysis')
 async def start_get_recommendation(clb: CallbackQuery, state: FSMContext):
     await clb.message.delete()
     data = await state.get_data()
     prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow. 
-    Твоя задача — провести интерактивный тест 'easy-анализ' для ученика перед оплатой занятий.
-    Вот данные по ученику:\nПредмет обучения: {data.get('category')}\nФормат обучения: {"индивидуальный" if data.get('training_type') == "individual" else "групповой"}
+    Твоя задача — провести интерактивный тест 'easy-анализ' для ученика перед оплатой занятий. 
     Этот тест должен помочь определить: 
-    1. его стартовый уровень по предмету, 
-    2. цель обучения, 
-    3. способ восприятия информации (визуальный, аудиальный, кинестетический, смешанный и др.), 
-    4. тип усвоения информации (логический, ассоциативный, структурный и др.), 
-    5. скорость усвоения информации (быстрая, средняя, медленная). 
+    1. его стартовый уровень по предмету. Задай 10 вопросов разного уровня сложности по предмету.  
+    2. цель обучения – задай 3 вопроса разного формата, чтобы четко определить цель изучения., 
+    3. способ восприятия информации (визуальный, аудиальный, кинестетический, смешанный и др.)- задай 3 вопроса сформулированных по-разному, чтобы это определить. Не спрашивай прямо.  
+    4. тип усвоения информации (логический, ассоциативный, структурный и др.) – задай 3 вопроса с разными формулировками, чтобы правильно определить тип усвоения информации, не спрашивай прямо. 
+    5. скорость усвоения информации (быстрая, средняя, медленная) – задай 2 вопроса сформулированных по-разному, чтобы правильно определить какуя скорость усвоения информации у ученика. Не спрашивай прямо
+    Формулируй вопросы просто и понятно, с возможностью выбора ответа, а где уместно — с короткими открытыми ответами.
     Тест состоит из единого потока вопросов, на который ученик отвечает последовательно. 
-    Верни вопросы в формате JSON (БЕЗ РАЗМЕТОК, ПРОСТО ФИГУРНЫЕ СКОБКИ - ЭТО ВАЖНО), где каждый вопрос обозначен ключом от 1 до 10:
+    Верни вопросы в формате JSON (БЕЗ РАЗМЕТОК, ПРОСТО ФИГУРНЫЕ СКОБКИ - ЭТО ВАЖНО), где каждый вопрос обозначен ключом от 1 до 21:
     {{
          "1": "вопрос 1",
          "2": "вопрос 2",
          ...
-         "10": "вопрос 10"
+         "21": "вопрос 10"
     }}''')
+
     response = await fetch_response(prompt)
     if not response:
         await clb.message.answer("Ошибка при генерации вопросов. Попробуйте снова.")
@@ -288,8 +306,7 @@ async def start_get_recommendation(clb: CallbackQuery, state: FSMContext):
     count = 1
     await state.update_data(questions=questions, count=count)
     await state.set_state(AITesting.survey)
-    keyboard = await stop_analysis(f'training_type|{data.get("training_type")}')
-    await clb.message.answer(questions[str(count)], reply_markup=keyboard)
+    await clb.message.answer(questions[str(count)])
 
 
 @subject_router.message(StateFilter(AITesting.survey))
@@ -302,30 +319,49 @@ async def get_recommendation(msg: Message, state: FSMContext):
     count = data.get('count')
     if count == 10:
         formatted_questions = pformat(data.get('questions'))
-        prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow.
-Твоя задача выдать персонализированную и детальную рекомендацию по обучению. 
-Эта рекомендация должна включать: 
-1. Выводы по стартовому уровню ученика. 
-2. Оптимальное количество занятий в неделю для достижения цели. 
-3. Рекомендованный формат занятий (индивидуальные, групповые, интенсивные и т. д.). 
-4. Методы, которые лучше всего подойдут ученику в зависимости от его стиля восприятия и типа усвоения информации. 
-5. Рекомендации по адаптации темпа обучения в зависимости от скорости усвоения информации. 
-6.Советы по повышению эффективности обучения. 
-7. Индивидуальный план обучения со списком тем и домашним заданиям\n
-Вот вопросы на которые отвечал ученик:\n{formatted_questions}\n
-Вот ответы ученика на данные вопросы:\n {data.get('answers')}''')
+        prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow. 
+        Твоя задача выдать персонализированную и детальную рекомендацию по обучению. 
+        Эта рекомендация должна включать: 
+        1. Выводы по стартовому уровню ученика. 
+        2. Оптимальное количество занятий в неделю для достижения цели. 
+        3. Рекомендованный формат занятий (индивидуальные, групповые, интенсивные и т. д.). 
+        4. Методы, которые лучше всего подойдут ученику в зависимости от его стиля восприятия и типа усвоения информации. 
+        5. Рекомендации по адаптации темпа обучения в зависимости от скорости усвоения информации.  
+        6.Советы по повышению эффективности обучения. 
+        7. Индивидуальный план обучения со списком тем и домашним заданиям
+        Вот вопросы на которые отвечал ученик:\n{formatted_questions}\n
+        Вот ответы ученика на данные вопросы:\n{data.get('answers')}''')
         answer = await fetch_response(prompt)
-        keyboard = await custom_poll_builder(f'training_type|{data.get("training_type")}')
+        with open(f'{msg.from_user.id}_{data.get("category")}.pdf', 'rb+') as file:
+            file.write(answer)
+        await msg.answer(answer)
         await state.set_state(None)
-        await msg.answer(answer, reply_markup=keyboard)
+        builder: MediaGroupBuilder = MediaGroupBuilder()
+        prices = [
+            'src/pics/subject_prices/price_1.png',
+            'src/pics/subject_prices/price_2.png',
+            'src/pics/subject_prices/price_3.png',
+            'src/pics/subject_prices/price_4.png',
+            'src/pics/subject_prices/price_5.png',
+            'src/pics/subject_prices/price_6.png'
+        ]
+        for image in prices:
+            if image.endswith('png'):
+                builder.add_photo(media=FSInputFile(path=image))
+        clb = 'school_subjects' if data.get('product_type') == 'subject' else 'languages'
+        keyboard = await training_type_builder(clb)
+        messages = []
+        for msg in await msg.answer_media_group(builder.build()):
+            messages.append(msg.message_id)
+        await state.update_data(photos_to_delete=messages)
+        await msg.answer('Выберите формат занятий', reply_markup=keyboard)
         return
     questions = data.get('questions')
     answers = data.get('answers', '')
     answers += f"\nВопрос: {questions[str(count)]}\n Ответ: {msg.text}\n"
     count += 1
     await state.update_data(answers=answers, count=count)
-    keyboard = await stop_analysis(f'training_type|{data.get("training_type")}')
-    await msg.answer(questions[str(count)], reply_markup=keyboard)
+    await msg.answer(questions[str(count)])
 
 
 @subject_router.message(and_f(F.text, StateFilter(TrainingInput.waiting_for_integer)))
