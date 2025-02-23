@@ -145,12 +145,12 @@ async def choose_product_lang(call: CallbackQuery, state: FSMContext):
     await state.update_data(product_type="language", category=call.data.split("|")[1])
     builder: MediaGroupBuilder = MediaGroupBuilder()
     prices = [
-        'src/pics/subject_prices/prices1.png',
-        'src/pics/subject_prices/prices2.png',
-        'src/pics/subject_prices/prices3.png',
-        'src/pics/subject_prices/prices4.png',
-        'src/pics/subject_prices/prices5.png',
-        'src/pics/subject_prices/prices6.png'
+        'src/pics/subject_prices/price_1.png',
+        'src/pics/subject_prices/price_2.png',
+        'src/pics/subject_prices/price_3.png',
+        'src/pics/subject_prices/price_4.png',
+        'src/pics/subject_prices/price_5.png',
+        'src/pics/subject_prices/price_6.png'
     ]
     for image in prices:
         if image.endswith('png'):
@@ -191,12 +191,12 @@ async def choose_product_sub(call: CallbackQuery, state: FSMContext):
     await state.update_data(product_type="subject", category=call.data.split("|")[1])
     builder: MediaGroupBuilder = MediaGroupBuilder()
     prices = [
-        'src/pics/subject_prices/prices1.png',
-        'src/pics/subject_prices/prices2.png',
-        'src/pics/subject_prices/prices3.png',
-        'src/pics/subject_prices/prices4.png',
-        'src/pics/subject_prices/prices5.png',
-        'src/pics/subject_prices/prices6.png'
+        'src/pics/subject_prices/price_1.png',
+        'src/pics/subject_prices/price_2.png',
+        'src/pics/subject_prices/price_3.png',
+        'src/pics/subject_prices/price_4.png',
+        'src/pics/subject_prices/price_5.png',
+        'src/pics/subject_prices/price_6.png'
     ]
     for image in prices:
         if image.endswith('png'):
