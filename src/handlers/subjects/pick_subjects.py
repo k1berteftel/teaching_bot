@@ -200,7 +200,7 @@ async def choose_product_sub(call: CallbackQuery, state: FSMContext):
     ]
     for image in prices:
         if image.endswith('png'):
-            builder.add_photo(FSInputFile(path='image'))
+            builder.add_photo(FSInputFile(path=image))
     keyboard = await training_type_builder('school_subjects')
     messages = []
     for msg in await call.message.answer_media_group(builder.build()):
