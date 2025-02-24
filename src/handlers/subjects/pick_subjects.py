@@ -332,7 +332,7 @@ async def get_recommendation(msg: Message, state: FSMContext):
 Вот вопросы на которые отвечал ученик:\n{formatted_questions}\n
 Вот ответы ученика на данные вопросы:\n{data.get('answers')}''')
         answer = await fetch_response(prompt)
-        with open(f'{msg.from_user.id}_{data.get("category")}.pdf', 'wb') as file:
+        with open(f'{msg.from_user.id}_{data.get("category")}.pdf', 'w') as file:
             file.write(answer)
         await msg.answer(answer)
         await state.set_state(None)
