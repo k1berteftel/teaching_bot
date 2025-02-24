@@ -275,7 +275,8 @@ async def choose_training_type(call: CallbackQuery, state: FSMContext):
 async def start_get_recommendation(clb: CallbackQuery, state: FSMContext):
     await clb.message.delete()
     data = await state.get_data()
-    prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow. Твоя задача — провести интерактивный тест по предмету: {data.get("category")}'easy-анализ' для ученика перед оплатой занятий. Этот тест должен помочь определить:
+    prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow. Твоя задача — провести интерактивный тест по предмету: {data.get("category")}'easy-анализ' для ученика перед оплатой занятий. 
+Этот тест должен помочь определить:
 1. его уровень по предмету. Задай 5 вопросов среднего уровня. И задай 5 тяжелых вопросов.
 2. цель обучения – задай 3 вопроса, чтобы четко определить цель изучения.,
 3. способ восприятия информации (визуальный, аудиальный, кинестетический, смешанный и др.)- задай 3 вопроса, чтобы это определить. Не спрашивай прямо. 
@@ -288,7 +289,7 @@ async def start_get_recommendation(clb: CallbackQuery, state: FSMContext):
          "1": "вопрос 1",
          "2": "вопрос 2",
          ...
-         "21": "вопрос 10"
+         "21": "вопрос 21"
     }}''')
 
     response = await fetch_response(prompt)
@@ -316,7 +317,7 @@ async def get_recommendation(msg: Message, state: FSMContext):
         ...
     data = await state.get_data()
     count = data.get('count')
-    if count == 10:
+    if count == 21:
         formatted_questions = pformat(data.get('questions'))
         prompt = (f'''Ты — интеллектуальный ассистент в онлайн-школе easyknow. 
 Твоя задача выдать персонализированную и детальную рекомендацию по обучению. 
