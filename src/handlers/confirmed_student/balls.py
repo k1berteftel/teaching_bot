@@ -97,10 +97,9 @@ async def balls_exchange(clb: CallbackQuery, state: FSMContext):
     await add_user_balls(clb.from_user.id, -1000)
     await clb.message.delete()
     data = await state.get_data()
-    partners = await get_user_partners(clb.from_user.id)
+    #partners = await get_user_partners(clb.from_user.id)
     text = (f'Ученик произвел обмен баллов на одно бесплатное занятие\nВот данные для заявки:\n - Имя: {data.get("name")}'
-            f'\n - Почта: {data.get("mail")}\n - Преметы обучения:\n{"".join(f"\t- Предмет: {partner.get('subject')}"
-            f"\n\t\tУчитель: {partner.get('name')}\n" for partner in partners)}\n - USER ID: {clb.from_user.id}')
+            f'\n - Почта: {data.get("mail")}\n - USER ID: {clb.from_user.id}')
     await clb.bot.send_message(
         chat_id=APPLICATION_GROUP_ID,
         text=text
