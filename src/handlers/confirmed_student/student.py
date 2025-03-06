@@ -12,10 +12,10 @@ from src.gpt.ask import fetch_response, get_assistant_and_thread, get_text_answe
 from src.database import UserModel, ProductModel
 from src.database.products import get_product_by_id, get_partner_subject, get_product_by_subject
 from src.database.rating import get_rating, get_subject_rating
-from src.database.user import get_user_data, get_user_products, get_user_partners
+from src.database.user import get_user_data, get_user_products, get_user_partners, get_user_balls
 from src.keyboards import (subjects, chatting_teacher_builder, confirmed_student,
                            stop_chatting_student, stop_chatting_teacher, student_subjects_builder,
-                           stop_send_homework, stop_Maks)
+                           stop_send_homework, stop_Maks, ref_menu_builder)
 from src.handlers.fsm_models import PartnerChatting, AiMaks
 
 next_level_balls = {
@@ -189,3 +189,15 @@ async def text_warning_answer(msg: Message, state: FSMContext):
         ...
     text = 'Пишите пожалуйста только текстовые сообщения, Макс еще не достаточно умный чтобы обрабатывать файлы и фотки'
     await msg.answer(text, reply_markup=stop_Maks)
+
+
+@student_router.callback_query(F.data == 'ref_menu')
+async def open_ref_menu(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    referral = await get_user_balls(clb.from_user.id)
+    ref_link = f'https://t.me/easyknow_bot?start={clb.from_user.id}'
+    text = (f'<b>👥Реферальная программа</b>\nПриглашайте друзей и получайте баллы чтобы '
+            f'потом обменять их на бесплатные занятия\n<b>Приглашенных друзей</b>: {referral.refs}'
+            f'\n<b>Ссылка для друзей</b>:\n<code>{ref_link}</code>')
+    keyboard = await ref_menu_builder(clb.from_user.id)
+    await clb.message.answer(text, reply_markup=keyboard)

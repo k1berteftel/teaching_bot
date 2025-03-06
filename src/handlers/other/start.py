@@ -1,7 +1,7 @@
 import os
 
 from aiogram import Router, F
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, FSInputFile
 from aiogram.utils.media_group import MediaGroupBuilder
@@ -9,7 +9,7 @@ from loguru import logger
 from os import getenv
 from dotenv import load_dotenv
 
-from src.database import get_user_data, update_user_name
+from src.database import get_user_data, update_user_name, get_all_users, update_user_referral
 from src.keyboards import student_menu_keyboard, teacher_or_student, teacher_start_menu_keyboard, confirmed_teacher, confirmed_student
 from src.handlers.fsm_models import NameInput
 
@@ -27,7 +27,19 @@ async def get_id(message: Message):
 
 
 @start_router.message(CommandStart())
-async def start_handler(message: Message, state: FSMContext):
+async def start_handler(message: Message, state: FSMContext, command: CommandObject):
+    referral = None
+    args = command.args
+    if args:
+        try:
+            referral = int(args)
+            if referral not in [user.telegram_id for user in await get_all_users()]:
+                referral = None
+        except Exception:
+            ...
+    user = await get_user_data(message.from_user.id)
+    if referral and not user.referral:
+        await update_user_referral(message.from_user.id, referral)
     try:
         await message.bot.edit_message_reply_markup(chat_id=message.from_user.id, message_id=message.message_id - 1)
     except Exception:

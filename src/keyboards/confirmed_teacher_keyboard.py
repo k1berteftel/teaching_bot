@@ -16,6 +16,15 @@ async def chatting_student_builder(datas: list[dict]) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+async def choose_student_builder(datas: list[dict]) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.max_width = 1
+    for data in datas:
+        builder.button(text=f'{data.get("subject")}|{data.get("name")}', callback_data=f'choose_student|{data.get("user_id")}')
+    builder.button(text='Назад', callback_data='teacher_main_menu')
+    return builder.as_markup()
+
+
 async def access_homework(student_id: int, subject: str) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -31,6 +40,38 @@ async def custom_back_builder(data: str):
             [InlineKeyboardButton(text='Назад', callback_data=data)]
         ]
     )
+    return keyboard
+
+
+async def teacher_management_builder() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='Регулярность', callback_data='manage|regularity')],
+            [InlineKeyboardButton(text='Активность на занятиях', callback_data='manage|activity')],
+            [InlineKeyboardButton(text='Назад', callback_data='teacher_balls_management')]
+        ]
+    )
+    return keyboard
+
+
+async def activity_balls_builder(category: str) -> InlineKeyboardMarkup:
+    if category == 'regularity':
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text='4 недели подряд', callback_data='add_balls|100')],
+                [InlineKeyboardButton(text='8 недель подряд', callback_data='add_balls|200')],
+                [InlineKeyboardButton(text='12 недель подряд', callback_data='add_balls|300')],
+            ]
+        )
+    else:
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text='Отвечал, задавал вопросы на уроке', callback_data='add_balls|10')],
+                [InlineKeyboardButton(text='3-4 урока на эту неделю', callback_data='add_balls|30')],
+
+            ]
+        )
+    keyboard.inline_keyboard.append([InlineKeyboardButton(text='Назад', callback_data='teacher_balls_management')])
     return keyboard
 
 

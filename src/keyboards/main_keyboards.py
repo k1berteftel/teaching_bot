@@ -39,11 +39,14 @@ confirmed_student = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Мой учителя', callback_data='my_teachers')],
     [InlineKeyboardButton(text='Мой прогресс', callback_data='my_progress')],
     [InlineKeyboardButton(text='Мой Макс', callback_data='gamification')],
+    [InlineKeyboardButton(text='Реферальная программа', callback_data='ref_menu')],
+    [InlineKeyboardButton(text='🎁Бесплатное занятие', callback_data='student_balls_menu')]
 ])
 
 confirmed_teacher = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Полигон', callback_data="ai_chat")],
     [InlineKeyboardButton(text="Методическая поддержка", callback_data="support|teacher")],
+    [InlineKeyboardButton(text='Начисление баллов ученику', callback_data='teacher_balls_management')],
     [InlineKeyboardButton(text="Мои ученики", callback_data="my_students")],
     [InlineKeyboardButton(text="Поддержка", callback_data="support")],
     [InlineKeyboardButton(text="Добавить предмет", callback_data="next")]

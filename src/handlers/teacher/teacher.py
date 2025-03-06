@@ -3,19 +3,20 @@ from os import listdir
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import StateFilter
+from aiogram.filters import StateFilter, and_f
 from aiogram.utils.media_group import MediaGroupBuilder
 from dotenv import load_dotenv
 
 from src.gpt.ask import fetch_response
 from src.database.products import get_partner_subject
-from src.database.user import get_user_partners
+from src.database.user import get_user_partners, add_user_balls
 from src.database import update_user_role, get_user_data, ProductModel, UserModel
 from src.handlers import AIChat
 from src.keyboards import (teacher_start_menu_keyboard, confirmed_teacher,
-                           confirmed_teacher_agreement_keyboard, chatting_student_builder, stop_chatting_teacher)
+                           confirmed_teacher_agreement_keyboard, chatting_student_builder, stop_chatting_teacher,
+                           teacher_management_builder, activity_balls_builder, choose_student_builder)
 from src.keyboards.back import quit_ai_chat
-from src.handlers.fsm_models import PartnerChatting
+from src.handlers.fsm_models import PartnerChatting, TeacherManagement
 
 teacher_router = Router()
 load_dotenv()
@@ -123,4 +124,53 @@ async def send_message_to_student(message: Message, state: FSMContext):
     await message.answer(
         '<b>Сообщение было доставлено</b>\nВы можете отправить следующее сообщение по необходимости',
         reply_markup=stop_chatting_teacher
+    )
+
+
+@teacher_router.callback_query(F.data == 'teacher_balls_management')
+async def send_choose_my_student(clb: CallbackQuery, state: FSMContext):
+    await state.clear()
+    students = await get_user_partners(clb.from_user.id)
+    if students is None:
+        await clb.answer('К сожалению пока что у вас нет учеников, как только вам определят ученика мы вас уведомим')
+        return
+    await clb.message.delete()
+    keyboard = await choose_student_builder(students)
+    await state.set_state(TeacherManagement.choose_student)
+    await clb.message.answer('Выберите ученика которому вы хотели бы начислить баллов', reply_markup=keyboard)
+
+
+@teacher_router.callback_query(and_f(F.data.startswith('choose_student'), StateFilter(TeacherManagement.choose_student)))
+async def teacher_management_menu(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    student_id = int(clb.data.split('|')[1])
+    await state.update_data(student_id=student_id)
+    keyboard = await teacher_management_builder()
+    await clb.message.answer(
+        'Выберите пункт за который вы хотели бы начислить баллы ученику',
+        reply_markup=keyboard
+    )
+
+
+@teacher_router.callback_query(F.data.startswith('manage'))
+async def teacher_manage_selector(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    category = clb.data.split('|')[1]
+    keyboard = await activity_balls_builder(category)
+    await clb.message.answer('Выберите за что вы бы хотели начислить ученику', reply_markup=keyboard)
+
+
+@teacher_router.callback_query(F.data.startswith('add_balls'))
+async def teacher_add_balls(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    data = await state.get_data()
+    balls = int(clb.data.split('|')[1])
+    student_id = data.get('student_id')
+    await add_user_balls(student_id, balls)
+    await clb.answer('Баллы были успешно начислены')
+
+    keyboard = await teacher_management_builder()
+    await clb.message.answer(
+        'Выберите пункт за который вы хотели бы начислить баллы ученику',
+        reply_markup=keyboard
     )

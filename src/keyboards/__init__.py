@@ -10,8 +10,9 @@ from .products import subjects, language_categories_builder, products_builder, p
     custom_poll_builder, promo_close_keyboard, stop_analysis
 from .back import student_menu_back, teacher_menu_back, back_to_resume
 from .confirmed_teacher_keyboard import confirmed_teacher_agreement_keyboard, chatting_student_builder, stop_chatting_teacher, access_homework, \
-    custom_back_builder
+    custom_back_builder, teacher_management_builder, activity_balls_builder, choose_student_builder
 from .student import (chatting_teacher_builder, stop_chatting_student,
                       homework_teacher_builder, stop_send_homework, student_subjects_builder,
-                      stop_Maks, student_survey_builder, back_survey)
+                      stop_Maks, student_survey_builder, back_survey, ref_menu_builder, balls_menu_builder,
+                      confirm_buy_keyboard, back_balls_menu)
 from .admin import *

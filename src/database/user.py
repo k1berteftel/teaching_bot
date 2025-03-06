@@ -4,7 +4,7 @@ import redis.asyncio as redis
 from sqlalchemy import select, insert, update
 
 from .connection import async_session_maker
-from .models import UserModel, ProductModel
+from .models import UserModel, ProductModel, StudentModel
 
 redis_client = redis.Redis(
     host='localhost',
@@ -13,10 +13,71 @@ redis_client = redis.Redis(
 )
 
 
+async def update_user_referral(telegram_id: int, referral_id: int):
+    async with async_session_maker() as session:
+        user: UserModel = await session.scalar(select(UserModel).where(UserModel.telegram_id == referral_id))
+        if not user.student:
+            await add_ref_model(referral_id)
+    async with async_session_maker() as session:
+        await session.execute(update(UserModel).where(UserModel.telegram_id == telegram_id).values(
+            referral=referral_id
+        ))
+        await session.execute(update(StudentModel).where(StudentModel.telegram_id == referral_id).values(
+            refs=StudentModel.refs + 1
+        ))
+        await session.commit()
+
+
+async def get_user_balls(telegram_id: int):
+    async with async_session_maker() as session:
+        user: StudentModel = await session.scalar(select(StudentModel).where(StudentModel.telegram_id == telegram_id))
+    return user if user else await add_ref_model(telegram_id)
+
+
+async def add_ref_model(telegram_id: int):
+    async with async_session_maker() as session:
+        user: UserModel = await session.scalar(select(UserModel).where(UserModel.telegram_id == telegram_id))
+        referral = StudentModel(
+            telegram_id=telegram_id,
+        )
+        user.student = referral
+        session.add(referral)
+        await session.commit()
+        return referral
+
+
+async def add_user_balls(telegram_id: int, balls: int):
+    async with async_session_maker() as session:
+        user: UserModel = await session.scalar(select(UserModel).where(UserModel.telegram_id == telegram_id))
+        if not user.student:
+            await add_ref_model(telegram_id)
+        await session.execute(update(StudentModel).where(StudentModel.telegram_id == telegram_id).values(
+            balls=StudentModel.balls + balls
+        ))
+        await session.commit()
+
+
 async def reset_user_products(telegram_id: int) -> None:
     async with async_session_maker() as session:
         user: UserModel = await session.scalar(select(UserModel).where(UserModel.telegram_id == telegram_id))
         user.subscribed_products = []
+        await session.commit()
+
+
+async def reset_user_partners(telegram_id: int):
+    async with async_session_maker() as session:
+        user = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
+        user = user.scalar_one_or_none()
+        datas = []
+        if user.partner:
+            for asso in user.partner:
+                partner_id: int = asso[1]
+                await session.execute(update(UserModel).where(UserModel.telegram_id == partner_id).values(
+                    partner=[]
+                ))
+        await session.execute(update(UserModel).where(UserModel.telegram_id == telegram_id).values(
+            partner=[]
+        ))
         await session.commit()
 
 
@@ -145,20 +206,20 @@ def deserialize_user(data: dict) -> UserModel:
 
 # Основная функция с кэшированием
 async def get_user_data(telegram_id: int) -> Optional[UserModel]:
-    cache_key = f"user:{telegram_id}"
-    cached_user = await redis_client.get(cache_key)
+    #cache_key = f"user:{telegram_id}"
+    #cached_user = await redis_client.get(cache_key)
 
-    if cached_user:
-        user_data = json.loads(cached_user)
-        return deserialize_user(user_data)
+    #if cached_user:
+        #user_data = json.loads(cached_user)
+        #return deserialize_user(user_data)
 
     async with async_session_maker() as session:
 
         user_stmt = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
         user = user_stmt.scalar_one_or_none()
-        if user:
-            user_data = serialize_user(user)
-            await redis_client.set(cache_key, json.dumps(user_data), ex=3600)
+        #if user:
+            #user_data = serialize_user(user)
+            #await redis_client.set(cache_key, json.dumps(user_data), ex=3600)
 
         return user
 

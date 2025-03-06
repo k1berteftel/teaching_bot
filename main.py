@@ -5,10 +5,10 @@ from asyncio import run
 from aiogram import Bot, Dispatcher
 from loguru import logger
 
-from src.database import update_user_role, create_counter
+from src.database import update_user_role, create_counter, reset_user_partners
 from src import student_router, start_router, learning_router, subject_router, admin_router, teacher_router, \
     menu_router, support_router, interview_router, product_router, interview_questions_router, back_subject_router, \
-    confirmed_student_router, survey_router, homework_router
+    confirmed_student_router, survey_router, homework_router, student_balls_router
 from src import create_tables
 from src import UserCheckMiddleware, GroupMessageMiddleware, GroupCallbackMiddleware, DeletePhotosMiddleware
 
@@ -51,7 +51,8 @@ logger.add("bot_log.log", rotation="10 MB", level='ERROR')
 
 async def bot_start():
     await create_tables()
-    #await update_user_role(7365313189, 'student')
+    #await update_user_role(471219957, 'student')
+    #await reset_user_partners(471219957)
     #await create_counter()
     logger.info("Bot is starting...")
     try:
@@ -62,6 +63,7 @@ async def bot_start():
             confirmed_student_router,
             survey_router,
             homework_router,
+            student_balls_router,
             teacher_router,
             interview_router,
             student_router,

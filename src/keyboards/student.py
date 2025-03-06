@@ -37,6 +37,42 @@ async def student_survey_builder(teacher_id: int) -> InlineKeyboardMarkup:
     return keyboard
 
 
+async def ref_menu_builder(user_id: int) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='🌐Поделиться',
+                                  url=f'http://t.me/share/url?url=https://t.me/easyknow_bot?start={user_id}')],
+            [InlineKeyboardButton(text='Назад', callback_data='back_student_menu')]
+        ]
+    )
+    return keyboard
+
+
+async def balls_menu_builder() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='Обменять баллы на занятие', callback_data='buy_student_lesson')],
+            [InlineKeyboardButton(text='Назад', callback_data='back_student_menu')]
+        ]
+    )
+    return keyboard
+
+
+confirm_buy_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text='Обменять', callback_data='confirm_buy_lessons')],
+        [InlineKeyboardButton(text='Назад', callback_data='back_student_menu')]
+    ]
+)
+
+
+back_balls_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text='Назад', callback_data='back_student_menu')]
+    ]
+)
+
+
 back_survey = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text='Назад', callback_data='back_survey_question')]

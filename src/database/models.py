@@ -22,10 +22,12 @@ class UserModel(Base):
     __tablename__ = "users"
     telegram_id = Column(BigInteger, unique=True)
     username = Column(String, nullable=False)
+    referral = Column(BigInteger, default=None, nullable=True)
     name = Column(String, default="")
     role = Column(String, default="")
     partner = Column(ARRAY(BigInteger), nullable=True, default=[])
 
+    student = relationship('StudentModel', lazy="selectin", uselist=False)
     rating = relationship('Rating', back_populates='user', lazy="selectin")
     subscribed_products = relationship(
         "ProductModel",
@@ -33,6 +35,14 @@ class UserModel(Base):
         back_populates="subscribers",
         lazy="selectin"
     )
+
+
+class StudentModel(Base):
+    __tablename__ = 'student'
+
+    telegram_id = Column(BigInteger, ForeignKey('users.telegram_id'))
+    refs = Column(Integer, default=0)
+    balls = Column(Integer, default=0)
 
 
 class ProductModel(Base):
@@ -50,6 +60,7 @@ class ProductModel(Base):
         back_populates="subscribed_products",
         lazy="selectin"
     )
+
 
 
 class Rating(Base):

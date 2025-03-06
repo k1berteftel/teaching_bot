@@ -15,7 +15,8 @@ from src.gpt.ask import fetch_response
 from src.handlers.fsm_models import TrainingInput, AITesting, Promo
 from src.database.products import get_product_by_id, get_subject_categories, \
     get_products_by_category, get_languages_categories, get_subject_teachers
-from src.database import update_user_role, get_user_data, add_product_to_user, get_user_by_username, get_count, add_count
+from src.database import update_user_role, get_user_data, add_product_to_user, get_user_by_username, get_count, add_count, \
+    add_user_balls
 from src.keyboards import subjects, subject_categories_builder, products_builder, product_actions_keyboard, \
     student_menu_back, language_categories_builder, training_type_builder, choose_lessons_builder, confirm_contract_builder, \
     user_name_builder, contract_builder, close_quiz_builder, payment_builder, custom_poll_builder, choose_teacher_builder, \
@@ -621,6 +622,13 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
     if not status:
         await call.answer('Оплата не была совершенна, пожалуйста попробуйте еще')
         return
+    user = await get_user_data(call.from_user.id)
+    if user.referral:
+        await add_user_balls(user.referral, balls=2000)
+        await bot.send_message(
+            chat_id=user.referral,
+            text=f'Поздравляем! Ваш друг {user.name} зарегистрировался с вашим кодом. Вам начислено 2000 баллов.'
+        )
     await call.answer('Оплата была успешно подтверждена')
     datas = {
         'name': data.get('name'),
@@ -637,7 +645,6 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
         'date': datetime.datetime.today().strftime('%d.%m.%Y')
     }
     username = data.get("username")
-    user = await get_user_data(call.from_user.id)
     agreement = make_agreement(datas, output_path=f'Публичная_оферта_{user.name}.docx')
     caption = (f'<b>Заявка от пользователя {user.name}</b>\nID: {call.from_user.id}\n\nЗаказчик:\n'
                f'- ФИО: {data.get("name")}\n- Контактный телефон: {data.get("phone")}\n'

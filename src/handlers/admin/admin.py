@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.filters import or_f, and_f, StateFilter
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from dotenv import load_dotenv
 from os import getenv
 
@@ -12,7 +12,7 @@ from src.keyboards import (admin_panel, main_admin_builder, back_admin_builder,
                            teachers_menu, choose_teacher_product_builder, teacher_products_builder, candidate_result)
 from src.middlewares import AdminMiddleware
 from src.database import get_all_users, get_user_data, add_partner_to_user, reset_user_products, update_user_role, add_product_to_user, get_user_products
-from src.database.products import get_subject_teachers, get_all_languages, get_all_subjects, get_product_by_id
+from src.database.products import get_subject_teachers, get_all_languages, get_all_subjects, get_product_by_id, get_partner_subject
 
 admin_router = Router()
 
@@ -56,6 +56,7 @@ async def add_user_teacher(clb: CallbackQuery, state: FSMContext):
     student_id = int(clb.data.split('|')[2])
     await add_partner_to_user(student_id, teacher_id)
     await add_partner_to_user(teacher_id, student_id)
+    subject = await get_partner_subject(teacher_id, student_id)
     text = ('<b>Вам добавили нового учителя</b>, чтобы помочь ему найти индивидуальный '
             'подход к вашему обучению наш виртуальный помощник Макс просит вас '
             'пройти небольшой опрос, который поможет нам выявить цели вашего обучения, '
@@ -67,6 +68,15 @@ async def add_user_teacher(clb: CallbackQuery, state: FSMContext):
         text=text,
         reply_markup=keyboard
     )
+    try:
+        await clb.bot.send_document(
+            chat_id=teacher_id,
+            document=FSInputFile(path=f'{student_id}_{subject.subject}.pdf'),
+            caption='Вам добавили ученика, вот его easy-анализ'
+        )
+    except Exception as err:
+        print(err)
+    await clb.message.delete()
     await clb.answer('Учитель был успешно добавлен ученику')
 
 

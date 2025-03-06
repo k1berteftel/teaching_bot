@@ -99,3 +99,13 @@ class AiMaks(Base):
 
 class StudentSurvey(Base):
     collecting = State()
+
+
+class TeacherManagement(Base):
+    choose_student = State()
+
+
+class BallsExchange(Base):
+    waiting_for_name = State()
+    waiting_for_mail = State()
+    confirm = State()
