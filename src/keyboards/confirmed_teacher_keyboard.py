@@ -66,8 +66,9 @@ async def activity_balls_builder(category: str) -> InlineKeyboardMarkup:
     else:
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text='Отвечал, задавал вопросы на уроке', callback_data='add_balls|10')],
-                [InlineKeyboardButton(text='3-4 урока на эту неделю', callback_data='add_balls|30')],
+                [InlineKeyboardButton(text='💪Мощь', callback_data='add_balls|10')],
+                [InlineKeyboardButton(text='👍Неплохо', callback_data='add_balls|5')],
+                [InlineKeyboardButton(text='👌Пойдет', callback_data='add_balls|2')],
 
             ]
         )
