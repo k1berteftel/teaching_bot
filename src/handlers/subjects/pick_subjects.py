@@ -145,7 +145,7 @@ async def choose_product_lang(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="language", category=call.data.split("|")[1])
     data = await state.get_data()
-    if os.path.exists(f'{call.from_user.id}_{data.get("category")}.pdf'):
+    if os.path.exists(f'{call.from_user.id}_{data.get("category")}.txt'):
         builder: MediaGroupBuilder = MediaGroupBuilder()
         prices = [
             'src/pics/subject_prices/price_1.png',
@@ -210,7 +210,7 @@ async def choose_product_sub(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="subject", category=call.data.split("|")[1])
     data = await state.get_data()
-    if os.path.exists(f'{call.from_user.id}_{data.get("category")}.pdf'):
+    if os.path.exists(f'{call.from_user.id}_{data.get("category")}.txt'):
         builder: MediaGroupBuilder = MediaGroupBuilder()
         prices = [
             'src/pics/subject_prices/price_1.png',
@@ -333,7 +333,7 @@ async def get_recommendation(msg: Message, state: FSMContext):
 Вот вопросы на которые отвечал ученик:\n{formatted_questions}\n
 Вот ответы ученика на данные вопросы:\n{data.get('answers')}''')
         answer = await fetch_response(prompt)
-        with open(f'{msg.from_user.id}_{data.get("category")}.pdf', 'w') as file:
+        with open(f'{msg.from_user.id}_{data.get("category")}.txt', 'w') as file:
             file.write(answer)
         await msg.answer(answer)
         await state.set_state(None)
