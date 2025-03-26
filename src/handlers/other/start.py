@@ -9,7 +9,7 @@ from loguru import logger
 from os import getenv
 from dotenv import load_dotenv
 
-from src.database import get_user_data, update_user_name, get_all_users, update_user_referral
+from src.database import get_user_data, update_user_name, get_all_users, update_user_referral, get_partners, add_refs
 from src.keyboards import student_menu_keyboard, teacher_or_student, teacher_start_menu_keyboard, confirmed_teacher, confirmed_student
 from src.handlers.fsm_models import NameInput
 
@@ -29,6 +29,7 @@ async def get_id(message: Message):
 @start_router.message(CommandStart())
 async def start_handler(message: Message, state: FSMContext, command: CommandObject):
     referral = None
+    partner = None
     args = command.args
     if args:
         try:
@@ -36,10 +37,17 @@ async def start_handler(message: Message, state: FSMContext, command: CommandObj
             if referral not in [user.telegram_id for user in await get_all_users()]:
                 referral = None
         except Exception:
-            ...
+            try:
+                partner = int(args.split('-')[1])
+                if partner not in [partner.telegram_id for partner in await get_partners()]:
+                    partner = None
+            except Exception:
+                ...
     user = await get_user_data(message.from_user.id)
     if referral and not user.referral:
         await update_user_referral(message.from_user.id, referral)
+    if partner and not user.tutor:
+        await add_refs(partner, message.from_user.id)
     try:
         await message.bot.edit_message_reply_markup(chat_id=message.from_user.id, message_id=message.message_id - 1)
     except Exception:

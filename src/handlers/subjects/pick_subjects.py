@@ -16,7 +16,7 @@ from src.handlers.fsm_models import TrainingInput, AITesting, Promo
 from src.database.products import get_product_by_id, get_subject_categories, \
     get_products_by_category, get_languages_categories, get_subject_teachers
 from src.database import update_user_role, get_user_data, add_product_to_user, get_user_by_username, get_count, add_count, \
-    add_user_balls
+    add_user_balls, add_partner_earn
 from src.keyboards import subjects, subject_categories_builder, products_builder, product_actions_keyboard, \
     student_menu_back, language_categories_builder, training_type_builder, choose_lessons_builder, confirm_contract_builder, \
     user_name_builder, contract_builder, close_quiz_builder, payment_builder, custom_poll_builder, choose_teacher_builder, \
@@ -625,10 +625,22 @@ async def check_pay(call: CallbackQuery, state: FSMContext, bot: Bot):
     user = await get_user_data(call.from_user.id)
     if user.referral:
         await add_user_balls(user.referral, balls=2000)
-        await bot.send_message(
-            chat_id=user.referral,
-            text=f'Поздравляем! Ваш друг {user.name} зарегистрировался с вашим кодом. Вам начислено 2000 баллов.'
-        )
+        try:
+            await bot.send_message(
+                chat_id=user.referral,
+                text=f'Поздравляем! Ваш друг {user.name} зарегистрировался с вашим кодом. Вам начислено 2000 баллов.'
+            )
+        except Exception:
+            ...
+    if user.tutor:
+        await add_partner_earn(user.tutor, data.get("price"))
+        try:
+            await bot.send_message(
+                chat_id=user.tutor,
+                text=f'Поздравляем! Ваш реферал {user.name} приобрел пакет уроков, вы получили свою прибыль'
+            )
+        except Exception:
+            ...
     await call.answer('Оплата была успешно подтверждена')
     datas = {
         'name': data.get('name'),

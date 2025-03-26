@@ -15,4 +15,5 @@ from .student import (chatting_teacher_builder, stop_chatting_student,
                       homework_teacher_builder, stop_send_homework, student_subjects_builder,
                       stop_Maks, student_survey_builder, back_survey, ref_menu_builder, balls_menu_builder,
                       confirm_buy_keyboard, back_balls_menu)
+from .partner import partner_menu_builder
 from .admin import *

@@ -8,7 +8,7 @@ admin_panel = ReplyKeyboardMarkup(keyboard=[
 
 teacher_or_student = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Хочу учиться", callback_data="student")],
-    [InlineKeyboardButton(text="Хочу преподавать", callback_data="teacher")]
+    [InlineKeyboardButton(text="Хочу преподавать", callback_data="teacher")],
 ])
 
 teacher_start_menu_keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -17,7 +17,8 @@ teacher_start_menu_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Договор", callback_data="agreement")],
     [InlineKeyboardButton(text="О нас", callback_data="about_us")],
     [InlineKeyboardButton(text="Медиа", callback_data="media")],
-    [InlineKeyboardButton(text="Хочу учиться", callback_data="student")]
+    [InlineKeyboardButton(text="Хочу учиться", callback_data="student")],
+    [InlineKeyboardButton(text='💵Партнерская программа', callback_data='partner')]
 ])
 
 student_menu_keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -29,7 +30,8 @@ student_menu_keyboard = InlineKeyboardMarkup(inline_keyboard=[
      InlineKeyboardButton(text="Вопросы", callback_data="questions")],
     [InlineKeyboardButton(text="Медиа", callback_data="media")],
     [InlineKeyboardButton(text="Поддержка", callback_data="support")],
-    [InlineKeyboardButton(text="Хочу преподавать", callback_data="teacher")]
+    [InlineKeyboardButton(text="Хочу преподавать", callback_data="teacher")],
+    [InlineKeyboardButton(text='💵Партнерская программа', callback_data='partner')]
 ])
 
 confirmed_student = InlineKeyboardMarkup(inline_keyboard=[
@@ -49,5 +51,6 @@ confirmed_teacher = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Начисление баллов ученику', callback_data='teacher_balls_management')],
     [InlineKeyboardButton(text="Мои ученики", callback_data="my_students")],
     [InlineKeyboardButton(text="Поддержка", callback_data="support")],
-    [InlineKeyboardButton(text="Добавить предмет", callback_data="next")]
+    [InlineKeyboardButton(text="Добавить предмет", callback_data="next")],
+    [InlineKeyboardButton(text='💵Партнерская программа', callback_data='partner')]
 ])

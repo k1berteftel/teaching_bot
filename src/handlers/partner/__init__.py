@@ -1,0 +1,1 @@
+from .menu import partner_router

@@ -8,3 +8,4 @@ from .subjects import subject_router, back_subject_router
 from .fsm_models import AddNewProduct, Support, DeleteProduct, Interview, TrainingInput
 from .confirmed_student import student_router as confirmed_student_router, survey_router, homework_router, student_balls_router
 from .teacher import teacher_router, interview_router, interview_questions_router
+from .partner import partner_router

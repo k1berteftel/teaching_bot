@@ -22,6 +22,7 @@ class UserModel(Base):
     __tablename__ = "users"
     telegram_id = Column(BigInteger, unique=True)
     username = Column(String, nullable=False)
+    tutor = Column(BigInteger, default=None, nullable=True)
     referral = Column(BigInteger, default=None, nullable=True)
     name = Column(String, default="")
     role = Column(String, default="")
@@ -35,6 +36,16 @@ class UserModel(Base):
         back_populates="subscribers",
         lazy="selectin"
     )
+
+
+class PartnerModel(Base):
+    __tablename__ = 'partner'
+
+    telegram_id = Column(BigInteger, unique=True)
+    refs = Column(Integer, default=0)
+    sum = Column(Integer, default=0)
+    earn = Column(Integer, default=0)
+
 
 
 class StudentModel(Base):
