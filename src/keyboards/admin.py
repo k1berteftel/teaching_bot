@@ -9,6 +9,7 @@ async def main_admin_builder() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text='Сделать рассылку', callback_data='malling')],
             [InlineKeyboardButton(text='Получить статистику', callback_data='statistic')],
             [InlineKeyboardButton(text='Управление учителями', callback_data='teachers_management')],
+            [InlineKeyboardButton(text='Выгрузить всех партнеров', callback_data='get_partners_table')]
         ]
     )
     return keyboard

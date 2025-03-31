@@ -17,7 +17,7 @@ async def add_partner(telegram_id: int) -> PartnerModel:
 
 async def get_partners() -> list[PartnerModel]:
     async with async_session_maker() as session:
-        partners = await session.scalars(select(PartnerModel))
+        partners = await session.scalars(select(PartnerModel).order_by(PartnerModel.earn))
     return list(partners)
 
 

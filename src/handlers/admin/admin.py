@@ -1,3 +1,6 @@
+import os
+
+import openpyxl
 from aiogram import Router, F
 from aiogram.filters import or_f, and_f, StateFilter
 from aiogram.filters.command import Command
@@ -11,8 +14,24 @@ from src.keyboards import (admin_panel, main_admin_builder, back_admin_builder,
                            choose_role_builder, choose_teacher_builder, student_survey_builder, teachers_manage_builder,
                            teachers_menu, choose_teacher_product_builder, teacher_products_builder, candidate_result)
 from src.middlewares import AdminMiddleware
-from src.database import get_all_users, get_user_data, add_partner_to_user, reset_user_products, update_user_role, add_product_to_user, get_user_products
+from src.database import get_all_users, get_user_data, add_partner_to_user, reset_user_products, update_user_role, add_product_to_user, get_user_products, get_partners
 from src.database.products import get_subject_teachers, get_all_languages, get_all_subjects, get_product_by_id, get_partner_subject
+
+
+def get_table(tables: list[list]) -> str:
+    """
+        Возвращает путь к файлу таблицы
+    """
+    wb = openpyxl.Workbook()
+    sheet = wb.active
+
+    for row in range(0, len(tables)):
+        for column in range(0, len(tables[row])):
+            c = sheet.cell(row=row + 1, column=column + 1)
+            c.value = tables[row][column]
+    wb.save(f'partners.xlsx')
+    return f'partners.xlsx'
+
 
 admin_router = Router()
 
@@ -310,3 +329,27 @@ async def get_statistics(clb: CallbackQuery):
             f' - Принятых учителей (прошедших собеседование): {roles.get("confirmed_teacher") if roles.get("confirmed_teacher") else 0}\n'
             f' - Учеников: {roles.get("student") if roles.get("student") else 0}\n - Принятых учеников(купивших курсы): {roles.get("confirmed_student") if roles.get("confirmed_student") else 0}')
     await clb.message.answer(text)
+
+
+@admin_router.callback_query(F.data == 'get_partners_table')
+async def get_partners_table(clb: CallbackQuery):
+    partners = await get_partners()
+    datas = []
+    for partner in partners:
+        user = await get_user_data(partner.telegram_id)
+        datas.append(
+            [
+                '@' + user.username if user.username else '-',
+                user.name,
+                partner.refs,
+                partner.sum,
+                partner.earn
+            ]
+        )
+    datas.insert(0, ['Юзернейм', 'Имя', 'Рефералов', 'Сумма продаж', 'Заработал'])
+    table = get_table(datas)
+    await clb.message.answer_document(FSInputFile(table))
+    try:
+        os.remove(table)
+    except Exception:
+        ...
