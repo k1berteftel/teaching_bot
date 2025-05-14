@@ -8,7 +8,6 @@ load_dotenv()
 client = AsyncOpenAI(
     api_key=os.getenv("OPENAI_TOKEN"),
     http_client=httpx.AsyncClient(proxy='http://eAzEJHXk:6WL4egih@109.205.62.47:64856')
-
 )
 
 MODEL_CONFIG = {

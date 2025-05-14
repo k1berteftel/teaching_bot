@@ -51,8 +51,8 @@ logger.add("bot_log.log", rotation="10 MB", level='ERROR')
 
 async def bot_start():
     await create_tables()
-    #await update_user_role(471219957, 'student')
-    #await reset_user_partners(471219957)
+    #await update_user_role(1236300146, 'confirmed_student')
+    #await reset_user_partners(1236300146)
     #await create_counter()
     logger.info("Bot is starting...")
     try:

@@ -66,7 +66,7 @@ User id: {message.from_user.id}
 @support_router.message(Support.student_tech_support_state)
 async def contact_tech_support(message: Message):
     await message.bot.send_message(
-        chat_id=TEACHER_GROUP_ID, text=f"""
+        chat_id=TECHNICAL_GROUP_ID, text=f"""
     Поступило новое обращение в тех поддержку:        
     От кого: @{message.from_user.username}
     User id: {message.from_user.id}
