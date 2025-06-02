@@ -98,7 +98,7 @@ async def start_handler(message: Message, state: FSMContext, command: CommandObj
         if user.role == "confirmed_teacher":
             await message.answer("Приветствую в нашей онлайн школе!",
                                  reply_markup=confirmed_teacher)
-        if user.role == 'confirmed_student':
+        if user.role == 'confirmed_student' or user.role == 'trial_student':
             await message.answer('Приветствую в нашей онлайн школе!',
                                  reply_markup=confirmed_student)
 

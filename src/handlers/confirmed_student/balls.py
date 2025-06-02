@@ -2,23 +2,14 @@ import datetime
 import json
 from os import getenv
 
-from aiogram import Router, F, Bot
+from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter, and_f
-from aiogram.types import CallbackQuery, FSInputFile, Message
-from aiogram.utils.media_group import MediaGroupBuilder
-
-from src.gpt.ask import fetch_response, get_assistant_and_thread, get_text_answer, delete_assistant_and_thread
-from src.database import UserModel, ProductModel
-from src.database.products import get_product_by_id, get_partner_subject, get_product_by_subject
-from src.database.rating import get_rating, get_subject_rating
-from src.database.user import get_user_data, get_user_products, get_user_partners, get_user_balls, add_user_balls
-from src.keyboards import (subjects, chatting_teacher_builder, confirmed_student,
-                           stop_chatting_student, stop_chatting_teacher, student_subjects_builder,
-                           stop_send_homework, stop_Maks, ref_menu_builder, balls_menu_builder, confirm_buy_keyboard,
+from aiogram.types import CallbackQuery, Message
+from src.database.user import get_user_balls, add_user_balls
+from src.keyboards import (balls_menu_builder, confirm_buy_keyboard,
                            custom_poll_builder, back_balls_menu)
 from src.handlers.fsm_models import BallsExchange
-
 
 APPLICATION_GROUP_ID = int(getenv('APPLICATION_GROUP_ID'))
 student_balls_router = Router()
@@ -97,9 +88,10 @@ async def balls_exchange(clb: CallbackQuery, state: FSMContext):
     await add_user_balls(clb.from_user.id, -1000)
     await clb.message.delete()
     data = await state.get_data()
-    #partners = await get_user_partners(clb.from_user.id)
-    text = (f'Ученик произвел обмен баллов на одно бесплатное занятие\nВот данные для заявки:\n - Имя: {data.get("name")}'
-            f'\n - Почта: {data.get("mail")}\n - USER ID: {clb.from_user.id}')
+    # partners = await get_user_partners(clb.from_user.id)
+    text = (
+        f'Ученик произвел обмен баллов на одно бесплатное занятие\nВот данные для заявки:\n - Имя: {data.get("name")}'
+        f'\n - Почта: {data.get("mail")}\n - USER ID: {clb.from_user.id}')
     await clb.bot.send_message(
         chat_id=APPLICATION_GROUP_ID,
         text=text
@@ -115,4 +107,3 @@ async def balls_exchange(clb: CallbackQuery, state: FSMContext):
             'больше баллов вместе')
     keyboard = await balls_menu_builder()
     await clb.message.answer(text, reply_markup=keyboard)
-

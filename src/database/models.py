@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import String, BigInteger, Integer, Table, Column, ForeignKey, Float, ARRAY, DATETIME
+from sqlalchemy import String, BigInteger, Integer, Table, Column, ForeignKey, Float, ARRAY, DateTime, Boolean
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.orm import Mapped, mapped_column
@@ -26,6 +26,8 @@ class UserModel(Base):
     referral = Column(BigInteger, default=None, nullable=True)
     name = Column(String, default="")
     role = Column(String, default="")
+    trial_date = Column(DateTime, default=None, nullable=True)
+    trial_period = Column(Boolean, default=False, nullable=True)
     partner = Column(ARRAY(BigInteger), nullable=True, default=[])
 
     student = relationship('StudentModel', lazy="selectin", uselist=False)

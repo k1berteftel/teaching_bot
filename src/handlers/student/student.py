@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from src.database import update_user_role
-from src.keyboards import student_menu_keyboard, student_menu_back, teacher_start_menu_keyboard
+from src.keyboards import student_menu_keyboard, student_menu_back, teacher_start_menu_keyboard, subjects
 
 student_router = Router()
 
@@ -242,3 +242,13 @@ async def show_prices(call: CallbackQuery, state: FSMContext):
 Спасибо за понимание! 😊             
         ''',
         reply_markup=student_menu_back)
+
+
+@student_router.callback_query(F.data == 'trial_period')
+async def switch_trial_period(call: CallbackQuery, state: FSMContext):
+    await call.message.delete()
+    await state.update_data(trial_period=True)
+    await call.message.answer_photo(
+        photo=FSInputFile("src/pics/subjects/subjects1.png"),
+        caption="Выберите опцию ниже", reply_markup=subjects
+    )

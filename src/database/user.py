@@ -1,16 +1,39 @@
+import datetime
 import json
 from typing import Literal, Optional
 import redis.asyncio as redis
-from sqlalchemy import select, insert, update
+from sqlalchemy import select, insert, update, delete
 
 from .connection import async_session_maker
-from .models import UserModel, ProductModel, StudentModel
+from .models import UserModel, ProductModel, StudentModel, Homeworks, Rating
 
 redis_client = redis.Redis(
     host='localhost',
     password="QLa<KA9mvh8^/q",
     username="user"
 )
+
+
+async def update_trial_period(telegram_id: int, trial_date: datetime.datetime | None):
+    async with async_session_maker() as session:
+        if trial_date is not None:
+            await session.execute(update(UserModel).where(UserModel.telegram_id == telegram_id).values(
+                trial_date=trial_date,
+                trial_period=True
+            ))
+        else:
+            await session.execute(update(UserModel).where(UserModel.telegram_id == telegram_id).values(
+                trial_date=trial_date,
+                trial_period=True
+            ))
+            await session.execute(delete(StudentModel).where(StudentModel.telegram_id == telegram_id))
+            rating: Rating = await session.scalar(select(Rating).where(Rating.telegram_id == telegram_id))
+            if rating:
+                await session.execute(delete(Rating).where(Rating.telegram_id == telegram_id))
+                await session.execute(delete(Homeworks).where(Homeworks.rating_id == rating.id))
+            user: UserModel = await session.scalar(select(UserModel).where(UserModel.telegram_id == telegram_id))
+            user.subscribed_products = []
+        await session.commit()
 
 
 async def update_user_referral(telegram_id: int, referral_id: int):
@@ -241,7 +264,7 @@ async def update_user_name(telegram_id: int, new_name: str):
 
 
 async def update_user_role(telegram_id: int,
-                           new_role: Literal["student", "teacher", "confirmed_teacher", "confirmed_student"]):
+                           new_role: Literal["student", "trial_student", "teacher", "confirmed_teacher", "confirmed_student"]):
     async with async_session_maker() as session:
         user_stmt = await session.execute(select(UserModel).where(UserModel.telegram_id == telegram_id))
         user = user_stmt.scalar_one_or_none()

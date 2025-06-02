@@ -15,7 +15,7 @@ from src.database.rating import get_rating, get_subject_rating
 from src.database.user import get_user_data, get_user_products, get_user_partners, get_user_balls
 from src.keyboards import (subjects, chatting_teacher_builder, confirmed_student,
                            stop_chatting_student, stop_chatting_teacher, student_subjects_builder,
-                           stop_send_homework, stop_Maks, ref_menu_builder)
+                           stop_send_homework, stop_Maks, ref_menu_builder, chatting_max_builder)
 from src.handlers.fsm_models import PartnerChatting, AiMaks
 
 next_level_balls = {
@@ -69,23 +69,34 @@ async def start_student(clb: CallbackQuery, state: FSMContext):
 @student_router.callback_query(F.data == 'my_teachers')
 async def show_teachers_chats(clb: CallbackQuery, state: FSMContext):
     await state.clear()
-    teachers = await get_user_partners(clb.from_user.id)
-    if teachers is None:
-        await clb.answer('К сожалению пока что у вас нет учителей, как только вам определят учителя мы вас уведомим')
-        return
-    await clb.message.delete()
-    keyboard = await chatting_teacher_builder(teachers)
+    user = await get_user_data(clb.from_user.id)
+    if user.role == 'confirmed_student':
+        teachers = await get_user_partners(clb.from_user.id)
+        if teachers is None:
+            await clb.answer('К сожалению пока что у вас нет учителей, как только вам определят учителя мы вас уведомим')
+            return
+        await clb.message.delete()
+        keyboard = await chatting_teacher_builder(teachers)
+    else:
+        products = await get_user_products(clb.from_user.id)
+        keyboard = await chatting_max_builder(products)
     await clb.message.answer('Выберите чат с учителем', reply_markup=keyboard)
 
 
 @student_router.callback_query(F.data.startswith('chatting'))
 async def start_chatting(clb: CallbackQuery, state: FSMContext):
     await clb.message.delete()
+    person = await get_user_data(clb.from_user.id)
+    if person.role == 'trial_student':
+        subject = await get_product_by_subject(clb.data.split('|')[1])
+        await state.update_data(subject=subject)
+        await state.set_state(PartnerChatting.student)
+        await clb.message.answer('Отправьте сообщение своему учителю', reply_markup=stop_chatting_student)
+        return
     partner_id = int(clb.data.split('|')[1])
     user = await get_user_data(partner_id)
     subject = await get_partner_subject(clb.from_user.id, partner_id)
     await state.update_data(partner=user, subject=subject)
-    person = await get_user_data(clb.from_user.id)
     if person.role == 'confirmed_student':
         await state.set_state(PartnerChatting.student)
         await clb.message.answer('Отправьте сообщение своему учителю', reply_markup=stop_chatting_student)
@@ -98,25 +109,38 @@ async def start_chatting(clb: CallbackQuery, state: FSMContext):
 async def send_message_to_teacher(message: Message, state: FSMContext):
     data = await state.get_data()
     user = await get_user_data(message.from_user.id)
-    partner: UserModel = data.get('partner')
-    subject: ProductModel = data.get('subject')
-    await message.bot.send_message(
-        chat_id=partner.telegram_id,
-        text=f'Сообщение от ученика <b>{user.name}</b>, по предмету: <b>{subject.subject}</b>'
-    )
-    await message.bot.copy_message(
-        chat_id=partner.telegram_id,
-        from_chat_id=message.chat.id,
-        message_id=message.message_id
-    )
-    try:
-        await message.bot.edit_message_reply_markup(chat_id=message.from_user.id, message_id=message.message_id - 1)
-    except Exception:  # рассчитать приблизительное расстояние для редактирования клавиатуры
-        ...
-    await message.answer(
-        '<b>Сообщение было доставлено</b>\nВы можете отправить следующее сообщение по необходимости',
-        reply_markup=stop_chatting_student
-    )
+    if user.role == 'confirmed_student':
+        partner: UserModel = data.get('partner')
+        subject: ProductModel = data.get('subject')
+        await message.bot.send_message(
+            chat_id=partner.telegram_id,
+            text=f'Сообщение от ученика <b>{user.name}</b>, по предмету: <b>{subject.subject}</b>'
+        )
+        await message.bot.copy_message(
+            chat_id=partner.telegram_id,
+            from_chat_id=message.chat.id,
+            message_id=message.message_id
+        )
+        try:
+            await message.bot.edit_message_reply_markup(chat_id=message.from_user.id, message_id=message.message_id - 1)
+        except Exception:  # рассчитать приблизительное расстояние для редактирования клавиатуры
+            ...
+        await message.answer(
+            '<b>Сообщение было успешно доставлено</b>\nВы можете отправить следующее сообщение по необходимости',
+            reply_markup=stop_chatting_student
+        )
+    else:
+        subject: ProductModel = data.get('subject')
+        assistant_id, thread_id = data.get('assistant_id'), data.get('thread_id')
+        if not assistant_id or not thread_id:
+            assistant_id, thread_id = await get_assistant_and_thread()
+            await state.update_data(assistant_id=assistant_id, thread_id=thread_id)
+        answer = await get_text_answer(message.text if message.text else message.caption, assistant_id, thread_id)
+        if not answer:
+            await message.answer('Произошла какая-то ошибка, пожалуйста попробуйте снова или обратитесь в тех.поддержку')
+            return
+        await message.answer(text=f'Сообщение от учителя <b>Макс</b>, по предмету: <b>{subject.subject}</b>')
+        await message.answer(answer)
 
 
 @student_router.callback_query(F.data == 'my_progress')

@@ -10,13 +10,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter, and_f
 from aiogram.types import CallbackQuery, FSInputFile, Message
 from aiogram.utils.media_group import MediaGroupBuilder
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from src.utils.schedulers import student_trial_period
 from src.gpt.ask import fetch_response
 from src.handlers.fsm_models import TrainingInput, AITesting, Promo
 from src.database.products import get_product_by_id, get_subject_categories, \
     get_products_by_category, get_languages_categories, get_subject_teachers
 from src.database import update_user_role, get_user_data, add_product_to_user, get_user_by_username, get_count, add_count, \
-    add_user_balls, add_partner_earn
+    add_user_balls, add_partner_earn, update_trial_period
 from src.keyboards import subjects, subject_categories_builder, products_builder, product_actions_keyboard, \
     student_menu_back, language_categories_builder, training_type_builder, choose_lessons_builder, confirm_contract_builder, \
     user_name_builder, contract_builder, close_quiz_builder, payment_builder, custom_poll_builder, choose_teacher_builder, \
@@ -25,6 +27,10 @@ from src.payment.tbank_pay import init_payment, check_payment
 
 from docx import Document
 from typing import Any, Dict
+
+
+scheduler: AsyncIOScheduler = AsyncIOScheduler()
+scheduler.start()
 
 
 def make_agreement(
@@ -145,6 +151,27 @@ async def choose_product_lang(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="language", category=call.data.split("|")[1])
     data = await state.get_data()
+    if data.get('trial_period'):
+        await add_product_to_user(call.from_user.id, call.data.split("|")[1])
+        await update_user_role(call.from_user.id, 'trial_student')
+        date = datetime.datetime.today() + datetime.timedelta(days=5)
+        await update_trial_period(call.from_user.id, date)
+        text = ('<b>🌟 Поздравляем! Вы успешно активировали пробный период! 🌟<?b>\n\nВ течение 5 дней вы '
+                'получаете полный доступ ко всему функционалу, который доступен нашим реальным ученикам. '
+                'Исследуйте возможности, обучайтесь и погружайтесь в процесс так, будто вы уже часть нашей '
+                'онлайн-школы!\n\n⏳ Время начать ваше путешествие прямо сейчас!')
+        job = scheduler.get_job(job_id=f'trial_period_{call.from_user.id}')
+        if job:
+            job.remove()
+        scheduler.add_job(
+            student_trial_period,
+            'interval',
+            args=[call.from_user.id, call.bot, scheduler],
+            id=f'trial_period_{call.from_user.id}',
+            day=1
+        )
+        await call.message.answer(text)
+        return
     if os.path.exists(f'{call.from_user.id}_{data.get("category")}.txt'):
         builder: MediaGroupBuilder = MediaGroupBuilder()
         prices = [
@@ -210,6 +237,27 @@ async def choose_product_sub(call: CallbackQuery, state: FSMContext):
     await call.message.delete()
     await state.update_data(product_type="subject", category=call.data.split("|")[1])
     data = await state.get_data()
+    if data.get('trial_period'):
+        await add_product_to_user(call.from_user.id, call.data.split("|")[1])
+        await update_user_role(call.from_user.id, 'trial_student')
+        date = datetime.datetime.today() + datetime.timedelta(days=5)
+        await update_trial_period(call.from_user.id, date)
+        text = ('<b>🌟 Поздравляем! Вы успешно активировали пробный период! 🌟<?b>\n\nВ течение 5 дней вы '
+                'получаете полный доступ ко всему функционалу, который доступен нашим реальным ученикам. '
+                'Исследуйте возможности, обучайтесь и погружайтесь в процесс так, будто вы уже часть нашей '
+                'онлайн-школы!\n\n⏳ Время начать ваше путешествие прямо сейчас!')
+        job = scheduler.get_job(job_id=f'trial_period_{call.from_user.id}')
+        if job:
+            job.remove()
+        scheduler.add_job(
+            student_trial_period,
+            'interval',
+            args=[call.from_user.id, call.bot, scheduler],
+            id=f'trial_period_{call.from_user.id}',
+            day=1
+        )
+        await call.message.answer(text)
+        return
     if os.path.exists(f'{call.from_user.id}_{data.get("category")}.txt'):
         builder: MediaGroupBuilder = MediaGroupBuilder()
         prices = [

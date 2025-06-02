@@ -1,5 +1,6 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from src.database import ProductModel
 
 
 async def chatting_teacher_builder(datas: list[dict]) -> InlineKeyboardMarkup:
@@ -10,11 +11,29 @@ async def chatting_teacher_builder(datas: list[dict]) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
+async def chatting_max_builder(products: list[ProductModel]):
+    builder = InlineKeyboardBuilder()
+    builder.max_width = 1
+    for product in products:
+        builder.button(text=f'{product.subject}|Mакс', callback_data=f'chatting|{product.subject}')
+    builder.button(text='Назад', callback_data='back_student_menu')
+    return builder.as_markup()
+
+
 async def homework_teacher_builder(datas: list[dict]) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.max_width = 1
     for data in datas:
         builder.button(text=f'{data.get("subject")}|{data.get("name")}', callback_data=f'homework|{data.get("user_id")}')
+    builder.button(text='Назад', callback_data='back_student_menu')
+    return builder.as_markup()
+
+
+async def homework_max_builder(products: list[ProductModel]):
+    builder = InlineKeyboardBuilder()
+    builder.max_width = 1
+    for product in products:
+        builder.button(text=f'{product.subject}|Mакс', callback_data=f'homework|{product.subject}')
     builder.button(text='Назад', callback_data='back_student_menu')
     return builder.as_markup()
 

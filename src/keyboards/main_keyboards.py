@@ -31,7 +31,8 @@ student_menu_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Медиа", callback_data="media")],
     [InlineKeyboardButton(text="Поддержка", callback_data="support")],
     [InlineKeyboardButton(text="Хочу преподавать", callback_data="teacher")],
-    [InlineKeyboardButton(text='💵Партнерская программа', callback_data='partner')]
+    [InlineKeyboardButton(text='💵Партнерская программа', callback_data='partner')],
+    [InlineKeyboardButton(text='✨Пробный период', callback_data='trial_period')]
 ])
 
 confirmed_student = InlineKeyboardMarkup(inline_keyboard=[
