@@ -4,6 +4,7 @@ from os import getenv
 from asyncio import run
 from aiogram import Bot, Dispatcher
 from loguru import logger
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from src.database import update_user_role, create_counter, reset_user_partners
 from src import student_router, start_router, learning_router, subject_router, admin_router, teacher_router, \
@@ -54,6 +55,8 @@ async def bot_start():
     #await update_user_role(1236300146, 'confirmed_student')
     #await reset_user_partners(1236300146)
     #await create_counter()
+    scheduler: AsyncIOScheduler = AsyncIOScheduler()
+    scheduler.start()
     logger.info("Bot is starting...")
     try:
         dp.include_routers(
@@ -76,7 +79,7 @@ async def bot_start():
             product_router
         )
         await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, scheduler=scheduler)
     except KeyboardInterrupt:
         return
     except Exception as e:

@@ -29,10 +29,6 @@ from docx import Document
 from typing import Any, Dict
 
 
-scheduler: AsyncIOScheduler = AsyncIOScheduler()
-scheduler.start()
-
-
 def make_agreement(
         data: Dict[str, Any],
         output_path: str,
@@ -147,7 +143,7 @@ async def languages(call: CallbackQuery):
 
 
 @subject_router.callback_query(F.data.startswith("language|"))
-async def choose_product_lang(call: CallbackQuery, state: FSMContext):
+async def choose_product_lang(call: CallbackQuery, state: FSMContext, scheduler: AsyncIOScheduler):
     await call.message.delete()
     await state.update_data(product_type="language", category=call.data.split("|")[1])
     data = await state.get_data()
@@ -233,7 +229,7 @@ async def school_subjects(call: CallbackQuery):
 
 
 @subject_router.callback_query(F.data.startswith("school_subject|"))
-async def choose_product_sub(call: CallbackQuery, state: FSMContext):
+async def choose_product_sub(call: CallbackQuery, state: FSMContext, scheduler: AsyncIOScheduler):
     await call.message.delete()
     await state.update_data(product_type="subject", category=call.data.split("|")[1])
     data = await state.get_data()
