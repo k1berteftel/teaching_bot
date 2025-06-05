@@ -109,3 +109,8 @@ class BallsExchange(Base):
     waiting_for_name = State()
     waiting_for_mail = State()
     confirm = State()
+
+
+class TrialManage(Base):
+    add_student = State()
+    del_student = State()

@@ -1,7 +1,9 @@
 import datetime
+import random
+
 from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from src.database import get_user_data, update_trial_period
+from src.database import get_user_data, update_trial_period, add_user_balls
 
 
 async def student_trial_period(user_id: int, bot: Bot, scheduler: AsyncIOScheduler):
@@ -21,3 +23,17 @@ async def student_trial_period(user_id: int, bot: Bot, scheduler: AsyncIOSchedul
         job = scheduler.get_job(job_id=f'trial_period_{user_id}')
         if job:
             job.remove()
+        return
+    balls = random.randint(5, 20)
+    await add_user_balls(user_id, balls)
+    text = (f'<b>Вы получили +{balls} баллов за регулярность ! 🎉</b>\n\n'
+            f'Мы ценим ваше стремление учиться каждый день и рады, что вы продолжаете двигаться к своим целям.\n\n'
+            f'<b>💡 Важно</b>: В рамках пробного периода баллы за регулярность начисляются автоматически. '
+            f'Однако после перехода на полноценное обучение такие бонусы будут начислять ваши учителя вручную. '
+            f'Это позволит сделать систему более гибкой и персонализированной для каждого ученика.\n\n'
+            f'<b>🎯 Продолжайте в том же духе!</b> Регулярность — ключ к успеху, и мы уверены, что вы '
+            f'добьетесь отличных результатов.')
+    await bot.send_message(
+        chat_id=user_id,
+        text=text
+    )

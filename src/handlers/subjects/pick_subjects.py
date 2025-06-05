@@ -164,7 +164,7 @@ async def choose_product_lang(call: CallbackQuery, state: FSMContext, scheduler:
             'interval',
             args=[call.from_user.id, call.bot, scheduler],
             id=f'trial_period_{call.from_user.id}',
-            day=1
+            days=1
         )
         await call.message.answer(text)
         return

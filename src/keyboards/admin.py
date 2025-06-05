@@ -9,7 +9,8 @@ async def main_admin_builder() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text='Сделать рассылку', callback_data='malling')],
             [InlineKeyboardButton(text='Получить статистику', callback_data='statistic')],
             [InlineKeyboardButton(text='Управление учителями', callback_data='teachers_management')],
-            [InlineKeyboardButton(text='Выгрузить всех партнеров', callback_data='get_partners_table')]
+            [InlineKeyboardButton(text='Выгрузить всех партнеров', callback_data='get_partners_table')],
+            [InlineKeyboardButton(text='Управление пробным периодом', callback_data='trial_period_menu')]
         ]
     )
     return keyboard
@@ -26,23 +27,23 @@ async def teachers_manage_builder() -> InlineKeyboardMarkup:
     return keyboard
 
 
-async def choose_teacher_product_builder() -> InlineKeyboardMarkup:
+async def choose_teacher_product_builder(back_clb: str) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text='Языки', callback_data='teacher_set|languages')],
             [InlineKeyboardButton(text='Предметы', callback_data='teacher_set|school_subjects')],
-            [InlineKeyboardButton(text='Назад', callback_data='add_teacher')]
+            [InlineKeyboardButton(text='Назад', callback_data=back_clb)]
         ]
     )
     return keyboard
 
 
-async def teacher_products_builder(subjects: list[ProductModel]):
+async def teacher_products_builder(subjects: list[ProductModel], back_clb: str):
     builder = InlineKeyboardBuilder()
     builder.max_width = 2
     for subject in subjects:
         builder.button(text=subject.subject, callback_data=f'set_{subject.id}')
-    builder.button(text='Назад', callback_data='add_teacher')
+    builder.button(text='Назад', callback_data=back_clb)
     return builder.as_markup()
 
 
@@ -83,3 +84,17 @@ async def choose_role_builder() -> InlineKeyboardMarkup:
         ]
     )
     return keyboard
+
+
+async def trial_management_build() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='Подключить', callback_data='trial_student_add')],
+            [InlineKeyboardButton(text='Отключить', callback_data='trial_student_del')],
+            [InlineKeyboardButton(text='Назад', callback_data='admin_panel')]
+        ]
+    )
+    return keyboard
+
+
+back_trial_management = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Назад', callback_data='trial_period_menu')]])

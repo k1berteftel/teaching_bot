@@ -1,4 +1,5 @@
 import os
+import datetime
 
 import openpyxl
 from aiogram import Router, F
@@ -6,15 +7,18 @@ from aiogram.filters import or_f, and_f, StateFilter
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, FSInputFile
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from os import getenv
 
-from src.handlers.fsm_models import MallingInput, TeachersInput
+from src.utils.schedulers import student_trial_period
+from src.handlers.fsm_models import MallingInput, TeachersInput, TrialManage
 from src.keyboards import (admin_panel, main_admin_builder, back_admin_builder,
                            choose_role_builder, choose_teacher_builder, student_survey_builder, teachers_manage_builder,
-                           teachers_menu, choose_teacher_product_builder, teacher_products_builder, candidate_result)
+                           teachers_menu, choose_teacher_product_builder, teacher_products_builder, candidate_result,
+                           trial_management_build, back_trial_management)
 from src.middlewares import AdminMiddleware
-from src.database import get_all_users, get_user_data, add_partner_to_user, reset_user_products, update_user_role, add_product_to_user, get_user_products, get_partners
+from src.database import get_all_users, get_user_data, add_partner_to_user, reset_user_products, update_user_role, add_product_to_user, get_user_products, get_partners, update_trial_period
 from src.database.products import get_subject_teachers, get_all_languages, get_all_subjects, get_product_by_id, get_partner_subject
 
 
@@ -229,7 +233,7 @@ async def add_teacher_id(msg: Message, state: FSMContext):
         return
     await state.update_data(teacher_id=teacher_id)
     await state.set_state(TeachersInput.add_teacher_product)
-    keyboard = await choose_teacher_product_builder()
+    keyboard = await choose_teacher_product_builder('add_teacher')
     await msg.answer('Выберите категорию которую вы хотели бы добавить учителю', reply_markup=keyboard)
 
 
@@ -242,7 +246,7 @@ async def add_teacher_product(clb: CallbackQuery, state: FSMContext):
         products = await get_all_languages()
     else:
         products = await get_all_subjects()
-    keyboard = await teacher_products_builder(products)
+    keyboard = await teacher_products_builder(products, 'add_teacher')
     await clb.message.answer(
         text='Выберите предмет|язык которые вы хотели бы добавить своему учителю',
         reply_markup=keyboard
@@ -265,7 +269,7 @@ async def add_teacher_subject(clb: CallbackQuery, state: FSMContext):
             products = await get_all_languages()
         else:
             products = await get_all_subjects()
-        keyboard = await teacher_products_builder(products)
+        keyboard = await teacher_products_builder(products, 'add_teacher')
         await clb.message.answer(
             text='Выберите предмет|язык которые вы хотели бы добавить учителю',
             reply_markup=keyboard
@@ -353,3 +357,138 @@ async def get_partners_table(clb: CallbackQuery):
         os.remove(table)
     except Exception:
         ...
+
+
+@admin_router.callback_query(F.data == 'trial_period_menu')
+async def trial_period_management(clb: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await clb.message.delete()
+    keyboard = await trial_management_build()
+    text = 'Выберите действие'
+    await clb.message.answer(
+        text=text,
+        reply_markup=keyboard
+    )
+
+
+@admin_router.callback_query(F.data.startswith('trial_student'))
+async def switch_trail_action(clb: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await clb.message.delete()
+    action = clb.data.split('_')[-1]
+    keyboard = back_trial_management
+    if action == 'add':
+        await state.set_state(TrialManage.add_student)
+        text = 'Введите telegram id (User Id) пользователя, которому вы хотели бы активировать пробный период'
+    else:
+        await state.set_state(TrialManage.del_student)
+        text = 'Введите telegram id (User Id) пользователя, которому вы хотели бы ДЕактивировать пробный период'
+    await clb.message.answer(text, reply_markup=keyboard)
+
+
+@admin_router.message(and_f(F.text, StateFilter(TrialManage.add_student)))
+async def get_trial_student_id(msg: Message, state: FSMContext, scheduler: AsyncIOScheduler):
+    await msg.delete()
+    try:
+        user_id = int(msg.text)
+    except Exception:
+        await msg.answer('Telegram id должен быть числом, пожалуйста попробуйте еще раз')
+        return
+    user = await get_user_data(user_id)
+    if not user:
+        await msg.answer('К сожалению такой пользователь не был найден, пожалуйста попробуйте еще раз')
+        return
+    if user.role in ['confirmed_teacher', 'confirmed_student']:
+        await msg.answer('Данный пользователь уже является принятым учителем или учеников купившим пакет уроков\n'
+                         'Требуется чтобы пользователь вышел из данных статусов')
+        return
+    if user.role == 'trial_student':
+        await msg.answer('Данный пользователь уже активировал пробный период')
+        return
+    await state.update_data(user_id=user.telegram_id)
+    keyboard = await choose_teacher_product_builder('trial_student_add')
+    await msg.answer('Выберите категорию в которую вы хотели бы добавить ученика пробного периода', reply_markup=keyboard)
+
+
+@admin_router.callback_query(and_f(F.data.startswith('teacher_set'), StateFilter(TrialManage.add_student)))
+async def add_trial_product(clb: CallbackQuery, state: FSMContext):
+    await clb.message.delete()
+    category = clb.data.split('|')[1]
+    await state.update_data(category=category)
+    if category == 'languages':
+        products = await get_all_languages()
+    else:
+        products = await get_all_subjects()
+    keyboard = await teacher_products_builder(products, 'trial_student_add')
+    await clb.message.answer(
+        text='Выберите предмет|язык которые вы хотели бы поставить ученику на пробный период',
+        reply_markup=keyboard
+    )
+
+
+@admin_router.callback_query(and_f(F.data.startswith('set'), StateFilter(TeachersInput.add_teacher_product)))
+async def add_trial_student(clb: CallbackQuery, state: FSMContext, scheduler: AsyncIOScheduler):
+    await clb.message.delete()
+    data = await state.get_data()
+    user_id = data.get('user_id')
+    product_id = int(clb.data.split('_')[1])
+    product = await get_product_by_id(product_id)
+    await add_product_to_user(user_id, product.subject)
+    await update_user_role(user_id, 'trial_student')
+    date = datetime.datetime.today() + datetime.timedelta(days=5)
+    await update_trial_period(user_id, date)
+    text = ('<b>🌟 Поздравляем! Вы успешно активировали пробный период! 🌟<?b>\n\nВ течение 5 дней вы '
+            'получаете полный доступ ко всему функционалу, который доступен нашим реальным ученикам. '
+            'Исследуйте возможности, обучайтесь и погружайтесь в процесс так, будто вы уже часть нашей '
+            'онлайн-школы!\n\n⏳ Время начать ваше путешествие прямо сейчас!')
+    job = scheduler.get_job(job_id=f'trial_period_{user_id}')
+    if job:
+        job.remove()
+    scheduler.add_job(
+        student_trial_period,
+        'interval',
+        args=[user_id, clb.bot, scheduler],
+        id=f'trial_period_{user_id}',
+        days=1
+    )
+    await clb.bot.send_message(
+        chat_id=user_id,
+        text=text
+    )
+    await clb.message.answer('У указанного ученика был успешно активирован пробный период ')
+    await state.clear()
+    keyboard = await trial_management_build()
+    text = 'Выберите действие'
+    await clb.message.answer(
+        text=text,
+        reply_markup=keyboard
+    )
+
+
+@admin_router.message(and_f(F.text, StateFilter(TrialManage.del_student)))
+async def del_trial_student(msg: Message, state: FSMContext, scheduler: AsyncIOScheduler):
+    await msg.delete()
+    try:
+        user_id = int(msg.text)
+    except Exception:
+        await msg.answer('Telegram id должен быть числом, пожалуйста попробуйте еще раз')
+        return
+    user = await get_user_data(user_id)
+    if not user:
+        await msg.answer('К сожалению такой пользователь не был найден, пожалуйста попробуйте еще раз')
+        return
+    if user.role != 'trial_student':
+        await msg.answer('Данный пользователь еще не активировал пробный период')
+        return
+    await update_trial_period(user_id, None)
+    job = scheduler.get_job(job_id=f'trial_period_{user_id}')
+    if job:
+        job.remove()
+    await msg.answer('У данного пользователя был успешно отключен пробный период')
+    await state.clear()
+    keyboard = await trial_management_build()
+    text = 'Выберите действие'
+    await msg.answer(
+        text=text,
+        reply_markup=keyboard
+    )

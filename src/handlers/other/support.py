@@ -63,6 +63,7 @@ User id: {message.from_user.id}
         message_id=message.message_id
     )
 
+
 @support_router.message(Support.student_tech_support_state)
 async def contact_tech_support(message: Message):
     await message.bot.send_message(
@@ -87,7 +88,7 @@ async def contact_support(call: CallbackQuery, state: FSMContext):
         await state.set_state(Support.method_support_state)
     elif user.role in ["teacher", "confirmed_teacher"]:
         await state.set_state(Support.teacher_support_state)
-    if user.role == "student" or user.role == "confirmed_student":
+    if user.role == "student" or user.role == "confirmed_student" or user.role == 'trial_student':
         await state.set_state(Support.student_support_state)
 
     keyboard = exit_support
@@ -127,7 +128,7 @@ async def contact_tech_support(call: CallbackQuery, state: FSMContext):
     user = await get_user_data(telegram_id=call.from_user.id)
     data = call.data.split("|")
     keyboard = None
-    if user.role == 'confirmed_student':
+    if user.role == 'confirmed_student' or user.role == 'trial_student':
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Выйти из чата с поддержкой", callback_data="back_student_menu")]
         ])
