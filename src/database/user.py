@@ -77,6 +77,9 @@ async def add_user_balls(telegram_id: int, balls: int):
         await session.execute(update(StudentModel).where(StudentModel.telegram_id == telegram_id).values(
             balls=StudentModel.balls + balls
         ))
+        await session.execute(update(Rating).where(Rating.telegram_id == telegram_id).values(
+            balls=Rating.balls + balls
+        ))
         await session.commit()
 
 
