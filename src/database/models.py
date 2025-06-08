@@ -88,7 +88,7 @@ class Rating(Base):
 
 class Homeworks(Base):
     __tablename__ = 'homeworks'
-    rating_id = Column(ForeignKey('rating.id'))
+    rating_id = Column(ForeignKey('rating.id', ondelete='CASCADE'))
     balls = Column(Integer, nullable=False)
     subject = Column(String, nullable=False)
 
