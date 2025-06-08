@@ -30,7 +30,8 @@ async def update_trial_period(telegram_id: int, trial_date: datetime.datetime | 
             rating: Rating = await session.scalar(select(Rating).where(Rating.telegram_id == telegram_id))
             if rating:
                 await session.execute(delete(Homeworks).where(Homeworks.rating_id == rating.id))
-                await session.execute(delete(Rating).where(Rating.telegram_id == telegram_id))
+                await session.commit()
+            await session.execute(delete(Rating).where(Rating.telegram_id == telegram_id))
             user: UserModel = await session.scalar(select(UserModel).where(UserModel.telegram_id == telegram_id))
             user.subscribed_products = []
         await session.commit()
