@@ -75,7 +75,6 @@ class ProductModel(Base):
     )
 
 
-
 class Rating(Base):
     __tablename__ = 'rating'
     telegram_id = Column(BigInteger, ForeignKey('users.telegram_id'))
