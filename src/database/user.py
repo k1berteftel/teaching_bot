@@ -31,6 +31,7 @@ async def update_trial_period(telegram_id: int, trial_date: datetime.datetime | 
             user: UserModel = await session.scalar(select(UserModel).where(UserModel.telegram_id == telegram_id))
             user.subscribed_products = []
         await session.commit()
+    await update_user_role(telegram_id, 'student')
 
 
 async def update_user_referral(telegram_id: int, referral_id: int):
