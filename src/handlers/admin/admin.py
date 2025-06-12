@@ -437,7 +437,7 @@ async def add_trial_student(clb: CallbackQuery, state: FSMContext, scheduler: As
     await update_user_role(user_id, 'trial_student')
     date = datetime.datetime.today() + datetime.timedelta(days=5)
     await update_trial_period(user_id, date)
-    text = ('<b>🌟 Поздравляем! Вы успешно активировали пробный период! 🌟<?b>\n\nВ течение 5 дней вы '
+    text = ('<b>🌟 Поздравляем! Вы успешно активировали пробный период! 🌟</b>\n\nВ течение 5 дней вы '
             'получаете полный доступ ко всему функционалу, который доступен нашим реальным ученикам. '
             'Исследуйте возможности, обучайтесь и погружайтесь в процесс так, будто вы уже часть нашей '
             'онлайн-школы!\n\n⏳ Время начать ваше путешествие прямо сейчас!')
