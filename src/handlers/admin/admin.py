@@ -487,6 +487,7 @@ async def del_trial_student(msg: Message, state: FSMContext, scheduler: AsyncIOS
         job.remove()
     await msg.answer('У данного пользователя был успешно отключен пробный период')
     await state.clear()
+    await update_user_role(user_id, 'student')
     keyboard = await trial_management_build()
     text = 'Выберите действие'
     await msg.answer(
