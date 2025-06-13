@@ -431,6 +431,7 @@ async def add_trial_student(clb: CallbackQuery, state: FSMContext, scheduler: As
     await clb.message.delete()
     data = await state.get_data()
     user_id = data.get('user_id')
+    print(user_id)
     product_id = int(clb.data.split('_')[1])
     product = await get_product_by_id(product_id)
     await add_product_to_user(user_id, product.subject)
