@@ -426,7 +426,7 @@ async def add_trial_product(clb: CallbackQuery, state: FSMContext):
     )
 
 
-@admin_router.callback_query(and_f(F.data.startswith('set'), StateFilter(TrialManage)))
+@admin_router.callback_query(and_f(F.data.startswith('set'), StateFilter(TrialManage.add_student)))
 async def add_trial_student(clb: CallbackQuery, state: FSMContext, scheduler: AsyncIOScheduler):
     await clb.message.delete()
     data = await state.get_data()
