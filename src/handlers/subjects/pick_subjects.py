@@ -147,28 +147,28 @@ async def choose_product_lang(call: CallbackQuery, state: FSMContext, scheduler:
     await call.message.delete()
     await state.update_data(product_type="language", category=call.data.split("|")[1])
     data = await state.get_data()
-    if data.get('trial_period'):
-        await add_product_to_user(call.from_user.id, call.data.split("|")[1])
-        await update_user_role(call.from_user.id, 'trial_student')
-        date = datetime.datetime.today() + datetime.timedelta(days=5)
-        await update_trial_period(call.from_user.id, date)
-        text = ('<b>🌟 Поздравляем! Вы успешно активировали пробный период! 🌟</b>\n\nВ течение 5 дней вы '
-                'получаете полный доступ ко всему функционалу, который доступен нашим реальным ученикам. '
-                'Исследуйте возможности, обучайтесь и погружайтесь в процесс так, будто вы уже часть нашей '
-                'онлайн-школы!\n\n⏳ Время начать ваше путешествие прямо сейчас!')
-        job = scheduler.get_job(job_id=f'trial_period_{call.from_user.id}')
-        if job:
-            job.remove()
-        scheduler.add_job(
-            student_trial_period,
-            'interval',
-            args=[call.from_user.id, call.bot, scheduler],
-            id=f'trial_period_{call.from_user.id}',
-            days=1
-        )
-        await call.message.answer(text)
-        return
     if os.path.exists(f'{call.from_user.id}_{data.get("category")}.txt'):
+        if data.get('trial_period'):
+            await add_product_to_user(call.from_user.id, call.data.split("|")[1])
+            await update_user_role(call.from_user.id, 'trial_student')
+            date = datetime.datetime.today() + datetime.timedelta(days=5)
+            await update_trial_period(call.from_user.id, date)
+            text = ('<b>🌟 Поздравляем! Вы успешно активировали пробный период! 🌟</b>\n\nВ течение 5 дней вы '
+                    'получаете полный доступ ко всему функционалу, который доступен нашим реальным ученикам. '
+                    'Исследуйте возможности, обучайтесь и погружайтесь в процесс так, будто вы уже часть нашей '
+                    'онлайн-школы!\n\n⏳ Время начать ваше путешествие прямо сейчас!')
+            job = scheduler.get_job(job_id=f'trial_period_{call.from_user.id}')
+            if job:
+                job.remove()
+            scheduler.add_job(
+                student_trial_period,
+                'interval',
+                args=[call.from_user.id, call.bot, scheduler],
+                id=f'trial_period_{call.from_user.id}',
+                days=1
+            )
+            await call.message.answer(text)
+            return
         builder: MediaGroupBuilder = MediaGroupBuilder()
         prices = [
             'src/pics/subject_prices/price_1.png',
@@ -355,7 +355,7 @@ async def start_get_recommendation(clb: CallbackQuery, state: FSMContext):
 
 
 @subject_router.message(StateFilter(AITesting.survey))
-async def get_recommendation(msg: Message, state: FSMContext):
+async def get_recommendation(msg: Message, state: FSMContext, scheduler: AsyncIOScheduler):
     try:
         await msg.bot.edit_message_reply_markup(chat_id=msg.from_user.id, message_id=msg.message_id - 1)
     except Exception:
@@ -381,6 +381,27 @@ async def get_recommendation(msg: Message, state: FSMContext):
             file.write(answer)
         await msg.answer(answer)
         await state.set_state(None)
+        if data.get('trial_period'):
+            await add_product_to_user(msg.from_user.id, data.get('category'))
+            await update_user_role(msg.from_user.id, 'trial_student')
+            date = datetime.datetime.today() + datetime.timedelta(days=5)
+            await update_trial_period(msg.from_user.id, date)
+            text = ('<b>🌟 Поздравляем! Вы успешно активировали пробный период! 🌟</b>\n\nВ течение 5 дней вы '
+                    'получаете полный доступ ко всему функционалу, который доступен нашим реальным ученикам. '
+                    'Исследуйте возможности, обучайтесь и погружайтесь в процесс так, будто вы уже часть нашей '
+                    'онлайн-школы!\n\n⏳ Время начать ваше путешествие прямо сейчас!')
+            job = scheduler.get_job(job_id=f'trial_period_{msg.from_user.id}')
+            if job:
+                job.remove()
+            scheduler.add_job(
+                student_trial_period,
+                'interval',
+                args=[msg.from_user.id, msg.bot, scheduler],
+                id=f'trial_period_{msg.from_user.id}',
+                days=1
+            )
+            await msg.answer(text)
+            return
         builder: MediaGroupBuilder = MediaGroupBuilder()
         prices = [
             'src/pics/subject_prices/price_1.png',
