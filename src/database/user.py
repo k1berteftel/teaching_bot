@@ -283,6 +283,12 @@ async def update_user_role(telegram_id: int,
             return user
 
 
+async def delete_user(telegram_id: int):
+    async with async_session_maker() as session:
+        await session.execute(delete(UserModel).where(UserModel.telegram_id == telegram_id))
+        await session.commit()
+
+
 async def is_user_not_exist_registrate(telegram_id: int, username: str):
     async with async_session_maker() as session:
         user = await session.execute(select(UserModel).filter(UserModel.telegram_id == telegram_id))

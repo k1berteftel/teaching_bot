@@ -7,6 +7,7 @@ from loguru import logger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from src.database import update_user_role, create_counter, reset_user_partners
+from src.database.user import delete_user
 from src import student_router, start_router, learning_router, subject_router, admin_router, teacher_router, \
     menu_router, support_router, interview_router, product_router, interview_questions_router, back_subject_router, \
     confirmed_student_router, survey_router, homework_router, student_balls_router, partner_router
@@ -54,6 +55,7 @@ async def bot_start():
     await create_tables()
     #await update_user_role(1236300146, 'confirmed_student')
     #await reset_user_partners(1236300146)
+    await delete_user(471219957)
     #await create_counter()
     scheduler: AsyncIOScheduler = AsyncIOScheduler()
     scheduler.start()
